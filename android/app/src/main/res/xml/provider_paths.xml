@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-files-path name="arise_downloads" path="Downloads/arise_updates/" />
+    <files-path name="arise_files" path="." />
+</paths>

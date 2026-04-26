@@ -1,0 +1,8 @@
+-keep class com.arise.music.** { *; }
+-keep class com.ryanheise.** { *; }
+-keep class xyz.luan.audioplayers.** { *; }
+-keep class com.google.android.exoplayer2.** { *; }
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-dontwarn okhttp3.**
+-dontwarn okio.**

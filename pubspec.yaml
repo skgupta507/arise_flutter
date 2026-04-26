@@ -1,0 +1,94 @@
+name: arise_music
+description: Arise Music — Rise from the Shadows. A complete music streaming app powered by JioSaavn and YouTube Music.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+  flutter: '>=3.16.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── Audio & Video ─────────────────────────────────────────────────────────
+  just_audio: ^0.9.38               # Saavn audio stream playback
+  just_audio_background: ^0.0.1-beta.11  # Background playback + lock screen controls
+  audio_service: ^0.18.14           # Media session / notification controls
+  youtube_explode_dart: ^2.2.0      # Extract YouTube stream URLs natively
+  video_player: ^2.8.3              # YouTube video playback
+  media_kit: ^1.1.10                # Advanced media playback
+  media_kit_video: ^1.2.4
+  media_kit_libs_android_video: ^1.3.2
+
+  # ── State management ──────────────────────────────────────────────────────
+  provider: ^6.1.2                  # App-wide state
+  riverpod: ^2.5.1                  # Fine-grained state (optional)
+
+  # ── HTTP & API ────────────────────────────────────────────────────────────
+  dio: ^5.4.3                       # HTTP client with interceptors
+  http: ^1.2.1                      # Simple HTTP
+
+  # ── Storage ───────────────────────────────────────────────────────────────
+  shared_preferences: ^2.2.3        # Lightweight key-value (like localStorage)
+  hive: ^2.2.3                      # Local DB for liked songs, playlists, history
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.3             # File system paths
+
+  # ── UI ────────────────────────────────────────────────────────────────────
+  cached_network_image: ^3.3.1      # Image caching
+  shimmer: ^3.0.0                   # Loading skeletons
+  flutter_staggered_grid_view: ^0.7.0
+  palette_generator: ^0.3.3+3       # Extract dominant color from album art
+  animations: ^2.0.11               # Hero + page transitions
+  lottie: ^3.1.2                    # Animated icons
+  marquee: ^2.2.3                   # Scrolling text for long song titles
+  flutter_svg: ^2.0.10+1            # SVG support
+
+  # ── Navigation ────────────────────────────────────────────────────────────
+  go_router: ^13.2.4                # Declarative routing
+
+  # ── Utilities ─────────────────────────────────────────────────────────────
+  intl: ^0.19.0                     # Date/time formatting
+  timeago: ^3.6.1                   # "2 minutes ago" etc.
+  url_launcher: ^6.3.0              # Open external URLs
+  package_info_plus: ^8.0.0         # App version for update checks
+  connectivity_plus: ^6.0.3         # Network state
+  permission_handler: ^11.3.1       # Runtime permissions
+  receive_sharing_intent: ^2.0.0    # Share music from other apps
+
+  # ── Update system ─────────────────────────────────────────────────────────
+  in_app_update: ^4.2.3             # For Play Store (optional future)
+  open_file: ^3.3.2                 # Open downloaded APK for install
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.9
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/fonts/
+
+  fonts:
+    - family: Orbitron
+      fonts:
+        - asset: assets/fonts/Orbitron-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Orbitron-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Orbitron-Black.ttf
+          weight: 900
+    - family: Rajdhani
+      fonts:
+        - asset: assets/fonts/Rajdhani-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Rajdhani-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Rajdhani-Bold.ttf
+          weight: 700

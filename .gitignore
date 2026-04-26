@@ -1,0 +1,30 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+.DS_Store
+
+# Android
+android/local.properties
+android/.gradle/
+android/captures/
+android/key.properties
+
+# Keystore — NEVER commit
+*.jks
+*.keystore
+keystore.properties
+android/keystore.properties
+keystore_base64.txt
+arise-release.jks
+
+# Coverage
+coverage/
