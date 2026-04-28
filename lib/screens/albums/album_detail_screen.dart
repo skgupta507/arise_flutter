@@ -42,11 +42,9 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark  = context.watch<ThemeProvider>().isDark;
-    final player  = context.read<PlayerProvider>();
+    final player  = Provider.of<PlayerProvider>(context, listen: false);
     final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
     final bg      = isDark ? AriseColors.demonBg      : AriseColors.angelBg;
-    final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
-    final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
 
     final images = _album?['image'] as List?;
@@ -73,11 +71,16 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                       fit: StackFit.expand,
                       children: [
                         if (thumb != null)
-                          CachedNetworkImage(
-                            imageUrl:    thumb,
-                            fit:         BoxFit.cover,
+                          ColorFiltered(
                             colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(.5), BlendMode.darken),
+                              Colors.black.withValues(alpha: 0.5), BlendMode.darken,
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: thumb,
+                              fit:      BoxFit.cover,
+                              width:    double.infinity,
+                              height:   double.infinity,
+                            ),
                           ),
                         Positioned(
                           left: 16, bottom: 16, right: 16,
@@ -150,10 +153,4 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
   }
 }
 
-extension _ListExt<T> on List<T> {
-  T? get lastOrNull => isEmpty ? null : last;
-}
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

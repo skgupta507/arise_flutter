@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/library_provider.dart';
-import '../../providers/player_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/cards/song_card.dart';
@@ -16,7 +15,6 @@ class LibraryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeProvider>().isDark;
     final lib    = context.watch<LibraryProvider>();
-    final player = context.read<PlayerProvider>();
     final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     final bg     = isDark ? AriseColors.demonBg     : AriseColors.angelBg;
     final textPri= isDark ? AriseColors.demonText   : AriseColors.angelText;
@@ -60,7 +58,7 @@ class LibraryScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal:14, vertical:12),
                   child: Row(children:[
                     Container(width:36, height:36,
-                      decoration: BoxDecoration(color:l.color.withOpacity(.15), borderRadius:BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color:l.color.withValues(alpha: .15), borderRadius:BorderRadius.circular(10)),
                       child: Icon(l.icon, color:l.color, size:18)),
                     const SizedBox(width:10),
                     Expanded(child: Column(crossAxisAlignment:CrossAxisAlignment.start, mainAxisAlignment:MainAxisAlignment.center, children:[

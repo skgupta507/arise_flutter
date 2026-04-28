@@ -58,8 +58,8 @@ class AppTheme {
         onSurface:      textPrimary,
         error:          const Color(0xFFCF6679),
         onError:        Colors.white,
-        background:     bg,
-        onBackground:   textPrimary,
+        surface:        bg,
+        onSurface:   textPrimary,
       ),
       fontFamily: 'Rajdhani',
       textTheme: TextTheme(
@@ -89,7 +89,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor:      isDark ? AriseColors.demonNav : AriseColors.angelNav,
-        indicatorColor:       accent.withOpacity(.15),
+        indicatorColor:       accent.withValues(alpha: .15),
         iconTheme:            WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected))
             return IconThemeData(color: accent, size:24);
@@ -103,7 +103,7 @@ class AppTheme {
         elevation:            0,
         surfaceTintColor:     Colors.transparent,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color:            card,
         elevation:        0,
         shape:            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -130,11 +130,11 @@ class AppTheme {
       ),
       sliderTheme: SliderThemeData(
         activeTrackColor:   accent,
-        inactiveTrackColor: (isDark ? AriseColors.demonFaint : AriseColors.angelFaint).withOpacity(.3),
+        inactiveTrackColor: (isDark ? AriseColors.demonFaint : AriseColors.angelFaint).withValues(alpha: .3),
         thumbColor:         accent,
         thumbShape:         const RoundSliderThumbShape(enabledThumbRadius:6),
         trackHeight:        3,
-        overlayColor:       accent.withOpacity(.2),
+        overlayColor:       accent.withValues(alpha: .2),
       ),
       dividerTheme: DividerThemeData(
         color:     isDark ? AriseColors.demonBorder : AriseColors.angelBorder,

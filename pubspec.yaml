@@ -16,15 +16,8 @@ dependencies:
   just_audio_background: ^0.0.1-beta.11  # Background playback + lock screen controls
   audio_service: ^0.18.14           # Media session / notification controls
   youtube_explode_dart: ^2.2.0      # Extract YouTube stream URLs natively
-  video_player: ^2.8.3              # YouTube video playback
-  media_kit: ^1.1.10                # Advanced media playback
-  media_kit_video: ^1.2.4
-  media_kit_libs_android_video: ^1.3.2
-
   # ── State management ──────────────────────────────────────────────────────
   provider: ^6.1.2                  # App-wide state
-  riverpod: ^2.5.1                  # Fine-grained state (optional)
-
   # ── HTTP & API ────────────────────────────────────────────────────────────
   dio: ^5.4.3                       # HTTP client with interceptors
   http: ^1.2.1                      # Simple HTTP
@@ -38,10 +31,8 @@ dependencies:
   # ── UI ────────────────────────────────────────────────────────────────────
   cached_network_image: ^3.3.1      # Image caching
   shimmer: ^3.0.0                   # Loading skeletons
-  flutter_staggered_grid_view: ^0.7.0
   palette_generator: ^0.3.3+3       # Extract dominant color from album art
   animations: ^2.0.11               # Hero + page transitions
-  lottie: ^3.1.2                    # Animated icons
   marquee: ^2.2.3                   # Scrolling text for long song titles
   flutter_svg: ^2.0.10+1            # SVG support
 
@@ -55,18 +46,15 @@ dependencies:
   package_info_plus: ^8.0.0         # App version for update checks
   connectivity_plus: ^6.0.3         # Network state
   permission_handler: ^11.3.1       # Runtime permissions
-  receive_sharing_intent: ^2.0.0    # Share music from other apps
+  receive_sharing_intent: 1.8.1     # Share music from other apps
 
   # ── Update system ─────────────────────────────────────────────────────────
-  in_app_update: ^4.2.3             # For Play Store (optional future)
-  open_file: ^3.3.2                 # Open downloaded APK for install
+  open_file_plus: ^3.4.1            # Open downloaded APK for install
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  hive_generator: ^2.0.1
-  build_runner: ^2.4.9
 
 flutter:
   uses-material-design: true

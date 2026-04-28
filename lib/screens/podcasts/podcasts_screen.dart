@@ -64,7 +64,7 @@ class _PodcastsScreenState extends State<PodcastsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark  = context.watch<ThemeProvider>().isDark;
-    final player  = context.read<PlayerProvider>();
+    final player  = Provider.of<PlayerProvider>(context, listen: false);
     final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
     final bg      = isDark ? AriseColors.demonBg      : AriseColors.angelBg;
     final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
@@ -210,9 +210,9 @@ class _PodcastCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   child: thumb.isNotEmpty
                       ? CachedNetworkImage(imageUrl:thumb, fit:BoxFit.cover,
-                          errorWidget:(_,__,___)=>Container(color:accent.withOpacity(.1),
+                          errorWidget:(_,__,___)=>Container(color:accent.withValues(alpha: .1),
                             child:Icon(Icons.mic_rounded, color:accent, size:40)))
-                      : Container(color:accent.withOpacity(.1),
+                      : Container(color:accent.withValues(alpha: .1),
                           child:Icon(Icons.mic_rounded, color:accent, size:40)),
                 ),
                 Positioned(top:6, right:6,
@@ -239,6 +239,3 @@ class _PodcastCard extends StatelessWidget {
   }
 }
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

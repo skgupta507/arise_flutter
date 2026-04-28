@@ -28,7 +28,7 @@ class MiniPlayer extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border:       Border.all(color: border),
         boxShadow: [BoxShadow(
-          color:      accent.withOpacity(.15),
+          color:      accent.withValues(alpha: .15),
           blurRadius: 20,
           spreadRadius: 2,
         )],
@@ -41,7 +41,7 @@ class MiniPlayer extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: LinearProgressIndicator(
               value:            player.progress,
-              backgroundColor:  (isDark ? AriseColors.demonFaint : AriseColors.angelFaint).withOpacity(.2),
+              backgroundColor:  (isDark ? AriseColors.demonFaint : AriseColors.angelFaint).withValues(alpha: .2),
               valueColor:       AlwaysStoppedAnimation<Color>(accent),
               minHeight:        3,
             ),
@@ -61,7 +61,7 @@ class MiniPlayer extends StatelessWidget {
                     errorWidget: (_, __, ___) => Container(
                       width: 44, height: 44,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(.15),
+                        color: accent.withValues(alpha: .15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(Icons.music_note, color: accent, size: 20),
@@ -145,10 +145,10 @@ class _PlayPauseBtn extends StatelessWidget {
           shape: BoxShape.circle,
           gradient: LinearGradient(
             colors: player.playing
-                ? [accent.withOpacity(.85), accent]
-                : [accent.withOpacity(.15), accent.withOpacity(.25)],
+                ? [accent.withValues(alpha: .85), accent]
+                : [accent.withValues(alpha: .15), accent.withValues(alpha: .25)],
           ),
-          boxShadow: player.playing ? [BoxShadow(color: accent.withOpacity(.4), blurRadius:10)] : null,
+          boxShadow: player.playing ? [BoxShadow(color: accent.withValues(alpha: .4), blurRadius:10)] : null,
         ),
         child: Icon(
           player.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,

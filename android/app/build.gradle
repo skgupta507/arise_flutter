@@ -20,7 +20,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.arise.music"
-    compileSdkVersion flutter.compileSdkVersion
+    compileSdk flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -38,8 +38,8 @@ android {
 
     defaultConfig {
         applicationId "com.arise.music"
-        minSdkVersion 26
-        targetSdkVersion flutter.targetSdkVersion
+        minSdk 26
+        targetSdk flutter.targetSdkVersion
         versionCode   flutter.versionCode
         versionName   flutter.versionName
         multiDexEnabled true
@@ -53,7 +53,6 @@ android {
                 storeFile     file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
             } else {
-                // CI: read from environment
                 keyAlias      System.getenv("KEY_ALIAS")
                 keyPassword   System.getenv("KEY_PASS")
                 storeFile     file(System.getenv("KEYSTORE_PATH") ?: "arise-release.jks")
@@ -81,6 +80,6 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22"
     implementation 'androidx.multidex:multidex:2.0.1'
 }

@@ -18,14 +18,7 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
   List<Map<String,dynamic>> _trending = [];
   List<Map<String,dynamic>> _results  = [];
   bool _loadingT   = true;
-  bool _loadingS   = false;
 
-  static const _trendingNames = [
-    'Arijit Singh','Shreya Ghoshal','AP Dhillon','Diljit Dosanjh',
-    'Badshah','Neha Kakkar','Jubin Nautiyal','Atif Aslam',
-    'Armaan Malik','Darshan Raval','Guru Randhawa','B Praak',
-    'Sonu Nigam','Udit Narayan','Sunidhi Chauhan','KK',
-  ];
 
   @override
   void initState() {
@@ -112,9 +105,9 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                       width:80, height:80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color:accent.withOpacity(.35), width:2),
+                        border: Border.all(color:accent.withValues(alpha: .35), width:2),
                         gradient: LinearGradient(
-                          colors: [accent.withOpacity(.2), accent.withOpacity(.05)]),
+                          colors: [accent.withValues(alpha: .2), accent.withValues(alpha: .05)]),
                       ),
                       child: ClipOval(
                         child: thumb != null
@@ -138,6 +131,3 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
   }
 }
 
-extension _ListExt<T> on List<T> {
-  T? get lastOrNull => isEmpty ? null : last;
-}

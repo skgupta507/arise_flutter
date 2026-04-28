@@ -141,7 +141,7 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.read<ThemeProvider>().isDark;
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
     final base   = isDark ? const Color(0xFF1C1C30) : const Color(0xFFEDE8C8);
     final hi     = isDark ? const Color(0xFF2A2A45) : const Color(0xFFFFF8DC);
 
@@ -167,6 +167,3 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
   }
 }
 
-extension _CtxExt on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

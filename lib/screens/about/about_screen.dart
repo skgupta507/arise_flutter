@@ -32,8 +32,6 @@ class _AboutScreenState extends State<AboutScreen> {
     final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
     final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
-    final card    = isDark ? AriseColors.demonCard    : AriseColors.angelCard;
-    final border  = isDark ? AriseColors.demonBorder  : AriseColors.angelBorder;
 
     return Scaffold(
       backgroundColor: bg,
@@ -50,8 +48,8 @@ class _AboutScreenState extends State<AboutScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDark
-                    ? [AriseColors.demonAccent.withOpacity(.15), AriseColors.demonBg]
-                    : [AriseColors.angelAccent.withOpacity(.12), AriseColors.angelBg],
+                    ? [AriseColors.demonAccent.withValues(alpha: .15), AriseColors.demonBg]
+                    : [AriseColors.angelAccent.withValues(alpha: .12), AriseColors.angelBg],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
@@ -114,9 +112,9 @@ class _AboutScreenState extends State<AboutScreen> {
             ].map((f) => Container(
               padding: const EdgeInsets.symmetric(horizontal:12, vertical:6),
               decoration: BoxDecoration(
-                color:        accent.withOpacity(.1),
+                color:        accent.withValues(alpha: .1),
                 borderRadius: BorderRadius.circular(20),
-                border:       Border.all(color:accent.withOpacity(.2)),
+                border:       Border.all(color:accent.withValues(alpha: .2)),
               ),
               child: Text(f, style:TextStyle(fontFamily:'Rajdhani', color:accent, fontSize:12, fontWeight:FontWeight.w600)),
             )).toList(),

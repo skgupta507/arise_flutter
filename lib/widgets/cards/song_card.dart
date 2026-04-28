@@ -34,7 +34,6 @@ class SongTile extends StatelessWidget {
     final textPri  = isDark ? AriseColors.demonText    : AriseColors.angelText;
     final textSub  = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut  = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
-    final cardBg   = isDark ? AriseColors.demonCard    : AriseColors.angelCard;
     final border   = isDark ? AriseColors.demonBorder  : AriseColors.angelBorder;
 
     final isPlaying = player.current?.id == song.id && player.playing;
@@ -47,10 +46,10 @@ class SongTile extends StatelessWidget {
         margin:  const EdgeInsets.symmetric(vertical: 2),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color:        isCurrent ? accent.withOpacity(.08) : cardBg,
+          color:        isCurrent ? accent.withValues(alpha: .08) : cardBg,
           borderRadius: BorderRadius.circular(14),
           border:       Border.all(
-            color: isCurrent ? accent.withOpacity(.3) : border,
+            color: isCurrent ? accent.withValues(alpha: .3) : border,
           ),
         ),
         child: Row(
@@ -79,7 +78,7 @@ class SongTile extends StatelessWidget {
                 fit:   BoxFit.cover,
                 errorWidget: (_, __, ___) => Container(
                   width: 46, height: 46,
-                  color: accent.withOpacity(.1),
+                  color: accent.withValues(alpha: .1),
                   child: Icon(Icons.music_note, color: accent, size: 20),
                 ),
               ),
@@ -148,7 +147,7 @@ class SongTile extends StatelessWidget {
   }
 
   void _showMenu(BuildContext ctx, PlayerProvider player, LibraryProvider lib) {
-    final isDark = ctx.read<ThemeProvider>().isDark;
+    final isDark = Provider.of<ThemeProvider>(ctx,     listen: false).isDark;
     showModalBottomSheet(
       context: ctx,
       backgroundColor: isDark ? AriseColors.demonCard : AriseColors.angelCard,
@@ -189,7 +188,7 @@ class SongTile extends StatelessWidget {
   }
 
   void _addToPlaylistSheet(BuildContext ctx, LibraryProvider lib) {
-    final isDark = ctx.read<ThemeProvider>().isDark;
+    final isDark = Provider.of<ThemeProvider>(ctx,     listen: false).isDark;
     showModalBottomSheet(
       context: ctx,
       backgroundColor: isDark ? AriseColors.demonCard : AriseColors.angelCard,
@@ -237,12 +236,11 @@ class SongCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final player  = context.read<PlayerProvider>();
-    final isDark  = context.read<ThemeProvider>().isDark;
+    final player  = Provider.of<PlayerProvider>(context, listen: false);
+    final isDark  = Provider.of<ThemeProvider>(context, listen: false).isDark;
     final accent   = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
     final textPri  = isDark ? AriseColors.demonText    : AriseColors.angelText;
     final textSub  = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
-    final cardBg   = isDark ? AriseColors.demonCard    : AriseColors.angelCard;
     final border   = isDark ? AriseColors.demonBorder  : AriseColors.angelBorder;
     final isPlaying= player.current?.id == song.id;
 
@@ -264,7 +262,7 @@ class SongCard extends StatelessWidget {
                     errorWidget: (_, __, ___) => Container(
                       width: width, height: width,
                       decoration: BoxDecoration(
-                        color:        accent.withOpacity(.1),
+                        color:        accent.withValues(alpha: .1),
                         borderRadius: BorderRadius.circular(12),
                         border:       Border.all(color: border),
                       ),
@@ -276,7 +274,7 @@ class SongCard extends StatelessWidget {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color:        accent.withOpacity(.3),
+                        color:        accent.withValues(alpha: .3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(child: _WaveIcon(color: Colors.white, size: 32)),
@@ -357,6 +355,3 @@ class _WaveIconState extends State<_WaveIcon> with SingleTickerProviderStateMixi
   }
 }
 
-extension _CtxExt on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

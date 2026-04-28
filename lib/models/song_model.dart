@@ -1,25 +1,22 @@
-import 'package:hive/hive.dart';
 
-part 'song_model.g.dart';
 
-@HiveType(typeId: 0)
-class SongModel extends HiveObject {
-  @HiveField(0)  final String id;
-  @HiveField(1)  final String title;
-  @HiveField(2)  final String artist;
-  @HiveField(3)  final String? album;
-  @HiveField(4)  final String? thumbnail;
-  @HiveField(5)  final String? streamUrl;   // Saavn download URL (pre-resolved)
-  @HiveField(6)  final String? ytId;        // YouTube video ID
-  @HiveField(7)  final String source;       // 'saavn' | 'youtube'
-  @HiveField(8)  final String? duration;
-  @HiveField(9)  final int?    durationSec;
-  @HiveField(10) final int     addedAt;
-  @HiveField(11) final String? language;
-  @HiveField(12) final String? albumId;
-  @HiveField(13) final String? artistId;
+class SongModel {
+  final String id;
+  final String title;
+  final String artist;
+  final String? album;
+  final String? thumbnail;
+  final String? streamUrl;   // Saavn download URL (pre-resolved)
+  final String? ytId;        // YouTube video ID
+  final String source;       // 'saavn' | 'youtube'
+  final String? duration;
+  final int?    durationSec;
+  final int     addedAt;
+  final String? language;
+  final String? albumId;
+  final String? artistId;
 
-  const SongModel({
+  SongModel({
     required this.id,
     required this.title,
     required this.artist,
@@ -116,7 +113,3 @@ class SongModel extends HiveObject {
   String toString() => 'SongModel($title — $artist)';
 }
 
-extension ListExt<T> on List<T> {
-  T? get lastOrNull  => isEmpty ? null : last;
-  T? get firstOrNull => isEmpty ? null : first;
-}

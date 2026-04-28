@@ -54,7 +54,6 @@ class _AlbumsScreenState extends State<AlbumsScreen> with SingleTickerProviderSt
     final bg     = isDark ? AriseColors.demonBg      : AriseColors.angelBg;
     final textPri= isDark ? AriseColors.demonText    : AriseColors.angelText;
     final textSub= isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
-    final card   = isDark ? AriseColors.demonCard    : AriseColors.angelCard;
 
     return Scaffold(
       backgroundColor: bg,
@@ -102,12 +101,12 @@ class _AlbumsScreenState extends State<AlbumsScreen> with SingleTickerProviderSt
                                   fit:         BoxFit.cover,
                                   width:       double.infinity,
                                   errorWidget: (_, __, ___) => Container(
-                                    color: accent.withOpacity(.1),
+                                    color: accent.withValues(alpha: .1),
                                     child: Icon(Icons.album_rounded, color: accent, size: 50),
                                   ),
                                 )
                               : Container(
-                                  color: accent.withOpacity(.1),
+                                  color: accent.withValues(alpha: .1),
                                   child: Icon(Icons.album_rounded, color: accent, size: 50),
                                 ),
                         ),
@@ -126,6 +125,3 @@ class _AlbumsScreenState extends State<AlbumsScreen> with SingleTickerProviderSt
   }
 }
 
-extension _ListExt<T> on List<T> {
-  T? get lastOrNull => isEmpty ? null : last;
-}

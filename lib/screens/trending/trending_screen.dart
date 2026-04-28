@@ -1,15 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/saavn_api.dart';
-import '../../api/muzo_api.dart';
 import '../../models/song_model.dart';
-import '../../providers/player_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/cards/song_card.dart';
-import '../../widgets/common/section_header.dart';
 
 class TrendingScreen extends StatefulWidget {
   const TrendingScreen({super.key});
@@ -21,7 +17,6 @@ class _TrendingScreenState extends State<TrendingScreen> with SingleTickerProvid
   late TabController _tabs;
   List<SongModel> _items = [];
   bool _loading = true;
-  int  _tabIdx  = 0;
 
   static const _cats = [
     ('🔥 All',      'trending hits india 2025'),
@@ -44,7 +39,7 @@ class _TrendingScreenState extends State<TrendingScreen> with SingleTickerProvid
 
   Future<void> _load(int i) async {
     if (!mounted) return;
-    setState(() { _loading = true; _tabIdx = i; });
+    setState(() => _loading = true);
     final results = await SaavnApi.searchSongs(_cats[i].$2, limit: 30);
     if (!mounted) return;
     setState(() { _items = results.map(SongModel.fromSaavn).toList(); _loading = false; });
@@ -53,7 +48,6 @@ class _TrendingScreenState extends State<TrendingScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeProvider>().isDark;
-    final player = context.read<PlayerProvider>();
     final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     final bg     = isDark ? AriseColors.demonBg     : AriseColors.angelBg;
 
@@ -83,6 +77,3 @@ class _TrendingScreenState extends State<TrendingScreen> with SingleTickerProvid
   }
 }
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

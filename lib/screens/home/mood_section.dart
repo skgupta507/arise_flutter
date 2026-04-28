@@ -37,7 +37,6 @@ class MoodSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeProvider>().isDark;
     final moods  = isDark ? _darkMoods : _lightMoods;
-    final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     final textPri= isDark ? AriseColors.demonText   : AriseColors.angelText;
     final textMut= isDark ? AriseColors.demonMuted  : AriseColors.angelMuted;
 
@@ -68,7 +67,7 @@ class MoodSection extends StatelessWidget {
                   gradient:     LinearGradient(colors: m.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(14),
                   border:       Border.all(
-                    color: isDark ? Colors.white.withOpacity(.04) : Colors.black.withOpacity(.05)),
+                    color: isDark ? Colors.white.withValues(alpha: .04) : Colors.black.withValues(alpha: .05)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal:12, vertical:10),
                 child: Stack(

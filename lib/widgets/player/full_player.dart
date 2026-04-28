@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
@@ -106,7 +106,7 @@ class _FullPlayerState extends State<FullPlayer> with SingleTickerProviderStateM
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [BoxShadow(
-                                    color: accent.withOpacity(.3),
+                                    color: accent.withValues(alpha: .3),
                                     blurRadius: 40, spreadRadius: 5,
                                   )],
                                 ),
@@ -116,7 +116,7 @@ class _FullPlayerState extends State<FullPlayer> with SingleTickerProviderStateM
                                     imageUrl:    song.thumbnail ?? '',
                                     fit:         BoxFit.cover,
                                     errorWidget: (_, __, ___) => Container(
-                                      color: accent.withOpacity(.1),
+                                      color: accent.withValues(alpha: .1),
                                       child: Icon(Icons.music_note, color:accent, size:80),
                                     ),
                                   ),
@@ -176,7 +176,7 @@ class _FullPlayerState extends State<FullPlayer> with SingleTickerProviderStateM
                                         end:   Alignment.bottomRight,
                                       ),
                                       boxShadow: [BoxShadow(
-                                        color:      accent.withOpacity(.5),
+                                        color:      accent.withValues(alpha: .5),
                                         blurRadius: 24, spreadRadius: 2,
                                       )],
                                     ),
@@ -226,9 +226,9 @@ class _FullPlayerState extends State<FullPlayer> with SingleTickerProviderStateM
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal:8, vertical:3),
                                   decoration: BoxDecoration(
-                                    color:        accent.withOpacity(.12),
+                                    color:        accent.withValues(alpha: .12),
                                     borderRadius: BorderRadius.circular(8),
-                                    border:       Border.all(color: accent.withOpacity(.3)),
+                                    border:       Border.all(color: accent.withValues(alpha: .3)),
                                   ),
                                   child: Text(
                                     song.source == 'youtube' ? 'YouTube' : 'Saavn',
@@ -261,7 +261,7 @@ class _FullPlayerState extends State<FullPlayer> with SingleTickerProviderStateM
   void _showSongMenu(BuildContext ctx, PlayerProvider p, LibraryProvider l, song) {
     showModalBottomSheet(
       context: ctx,
-      backgroundColor: context.read<ThemeProvider>().isDark
+      backgroundColor: Provider.of<ThemeProvider>(context, listen: false).isDark
           ? AriseColors.demonCard : AriseColors.angelCard,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -291,7 +291,7 @@ class _FullPlayerState extends State<FullPlayer> with SingleTickerProviderStateM
   void _showAddToPlaylist(BuildContext ctx, LibraryProvider lib, song) {
     showModalBottomSheet(
       context: ctx,
-      backgroundColor: ctx.read<ThemeProvider>().isDark
+      backgroundColor: Provider.of<ThemeProvider>(ctx,     listen: false).isDark
           ? AriseColors.demonCard : AriseColors.angelCard,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -344,9 +344,9 @@ class _SeekBar extends StatelessWidget {
             thumbShape:      const RoundSliderThumbShape(enabledThumbRadius:6),
             overlayShape:    const RoundSliderOverlayShape(overlayRadius:14),
             activeTrackColor:   accent,
-            inactiveTrackColor: accent.withOpacity(.2),
+            inactiveTrackColor: accent.withValues(alpha: .2),
             thumbColor:         accent,
-            overlayColor:       accent.withOpacity(.2),
+            overlayColor:       accent.withValues(alpha: .2),
           ),
           child: Slider(
             value:    player.progress,
@@ -402,7 +402,7 @@ class _QueueTab extends StatelessWidget {
               imageUrl:    s.thumbnail ?? '',
               width:  42, height: 42, fit: BoxFit.cover,
               errorWidget: (_, __, ___) => Container(
-                width:42, height:42, color: accent.withOpacity(.1),
+                width:42, height:42, color: accent.withValues(alpha: .1),
                 child: Icon(Icons.music_note, color:accent, size:18)),
             ),
           ),
@@ -430,6 +430,3 @@ class _QueueTab extends StatelessWidget {
   }
 }
 
-extension _ThemeExt on BuildContext {
-  T read<T>() => (this as dynamic).read<T>();
-}

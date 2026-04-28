@@ -12,7 +12,7 @@ class LikedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeProvider>().isDark;
     final lib    = context.watch<LibraryProvider>();
-    final player = context.read<PlayerProvider>();
+    final player = Provider.of<PlayerProvider>(context, listen: false);
     final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     final bg     = isDark ? AriseColors.demonBg     : AriseColors.angelBg;
     final textMut= isDark ? AriseColors.demonMuted  : AriseColors.angelMuted;

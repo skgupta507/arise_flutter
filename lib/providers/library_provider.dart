@@ -30,21 +30,15 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   void _load() {
-    // Liked songs
-    _liked = (_likedBox.get('songs', defaultValue: '[]') as String)
-        .let((s) => (jsonDecode(s) as List)
-            .map((j) => SongModel.fromSaavn(Map<String,dynamic>.from(j))).toList());
-
-    // Playlists
-    _userPls = (_playlists.get('all', defaultValue: '[]') as String)
-        .let((s) => (jsonDecode(s) as List)
-            .map((j) => PlaylistModel.fromJson(Map<String,dynamic>.from(j))).toList());
-
-    // Recently played
-    _history = (_recent.get('history', defaultValue: '[]') as String)
-        .let((s) => (jsonDecode(s) as List)
-            .map((j) => SongModel.fromSaavn(Map<String,dynamic>.from(j))).toList());
-
+    final likedStr = _likedBox.get('songs',   defaultValue: '[]') as String;
+    final plsStr   = _playlists.get('all',    defaultValue: '[]') as String;
+    final histStr  = _recent.get('history',   defaultValue: '[]') as String;
+    _liked   = (jsonDecode(likedStr) as List)
+        .map((j) => SongModel.fromSaavn(Map<String,dynamic>.from(j as Map))).toList();
+    _userPls = (jsonDecode(plsStr)   as List)
+        .map((j) => PlaylistModel.fromJson(Map<String,dynamic>.from(j as Map))).toList();
+    _history = (jsonDecode(histStr)  as List)
+        .map((j) => SongModel.fromSaavn(Map<String,dynamic>.from(j as Map))).toList();
     notifyListeners();
   }
 
@@ -142,10 +136,3 @@ class LibraryProvider extends ChangeNotifier {
   }
 }
 
-extension _Let<T> on T {
-  R let<R>(R Function(T) block) => block(this);
-}
-
-extension _ListExt<T> on List<T> {
-  T? get firstOrNull => isEmpty ? null : first;
-}

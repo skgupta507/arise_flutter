@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +19,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String  _version     = '';
   bool    _checkingUpd = false;
   String? _updStatus;
-  UpdateInfo? _pendingUpdate;
 
   // Playback prefs (persisted via Hive in a real implementation)
   bool   _autoplay  = true;
@@ -47,7 +47,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (info == null) {
         _updStatus = 'You are on the latest version ✓';
       } else {
-        _pendingUpdate = info;
         _updStatus = null;
       }
     });
@@ -55,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showUpdateDialog(UpdateInfo info) {
-    final isDark = context.read<ThemeProvider>().isDark;
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
     final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     showDialog(
       context: context,
@@ -109,8 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _updStatus = 'Download complete! Tap to install');
     // Open for install
     try {
-      // ignore: deprecated_member_use
-      await OpenFile.open(path);
+      await OpenFilePlus.open(path);
     } catch (_) {
       setState(() => _updStatus = 'Open the downloaded file manually to install');
     }
@@ -122,7 +120,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lib     = context.watch<LibraryProvider>();
     final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
     final bg      = isDark ? AriseColors.demonBg      : AriseColors.angelBg;
-    final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
 
     return Scaffold(
       backgroundColor: bg,
@@ -142,7 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _StatCard(label:'Liked Songs', value:'${lib.likedCount}',   icon:Icons.favorite_rounded,    color:accent,          isDark:isDark),
               _StatCard(label:'Playlists',   value:'${lib.plCount}',      icon:Icons.queue_music_rounded, color:const Color(0xFF4285F4), isDark:isDark),
               _StatCard(label:'Recently Played', value:'${lib.recentlyPlayed.length}', icon:Icons.history_rounded,  color:const Color(0xFF9D4EDD), isDark:isDark),
-              _StatCard(label:'Queue',       value:'${context.read<PlayerProvider>().queue.length}', icon:Icons.list_rounded, color:const Color(0xFF1DB954), isDark:isDark),
+              _StatCard(label:'Queue',       value:'${Provider.of<PlayerProvider>(context, listen: false).queue.length}', icon:Icons.list_rounded, color:const Color(0xFF1DB954), isDark:isDark),
             ],
           ),
           const SizedBox(height: 24),
@@ -157,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value:   !isDark,
               accent:  accent,
               isDark:  isDark,
-              onChanged: (_) => context.read<ThemeProvider>().toggleTheme(),
+              onChanged: (_) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
             ),
           ]),
           const SizedBox(height: 16),
@@ -343,7 +340,7 @@ class _SwitchRow extends StatelessWidget {
       color: isDark ? AriseColors.demonText : AriseColors.angelText, fontWeight:FontWeight.w700)),
     subtitle:Text(desc,  style: TextStyle(fontFamily:'Rajdhani',
       color: isDark ? AriseColors.demonMuted : AriseColors.angelMuted, fontSize:12)),
-    trailing:Switch(value:value, onChanged:onChanged, activeColor:accent),
+    trailing:Switch(value:value, onChanged:onChanged, activeTrackColor:accent, thumbColor: WidgetStatePropertyAll(Colors.white)),
   );
 }
 
@@ -401,8 +398,7 @@ class _SliderRow extends StatelessWidget {
         ]),
         Text(desc, style: TextStyle(fontFamily:'Rajdhani',
           color: isDark ? AriseColors.demonMuted : AriseColors.angelMuted, fontSize:12)),
-        Slider(value:value, min:min, max:max, divisions:divisions, onChanged:onChanged,
-          activeColor:accent, inactiveColor:accent.withOpacity(.2)),
+        Slider(value:value, min:min, max:max, divisions:divisions, onChanged:onChanged),
       ],
     ),
   );
@@ -479,6 +475,3 @@ class _Divider extends StatelessWidget {
   );
 }
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

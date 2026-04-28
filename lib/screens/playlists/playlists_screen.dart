@@ -21,11 +21,10 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
   Widget build(BuildContext context) {
     final isDark  = context.watch<ThemeProvider>().isDark;
     final lib     = context.watch<LibraryProvider>();
-    final player  = context.read<PlayerProvider>();
+    final player  = Provider.of<PlayerProvider>(context, listen: false);
     final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
     final bg      = isDark ? AriseColors.demonBg      : AriseColors.angelBg;
     final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
-    final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
     final card    = isDark ? AriseColors.demonCard    : AriseColors.angelCard;
     final border  = isDark ? AriseColors.demonBorder  : AriseColors.angelBorder;
@@ -122,7 +121,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal:14, vertical:12),
                     child: Row(children:[
                       Container(width:50, height:50,
-                        decoration: BoxDecoration(color:accent.withOpacity(.12), borderRadius:BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color:accent.withValues(alpha: .12), borderRadius:BorderRadius.circular(12)),
                         child: pl.songs.isNotEmpty && pl.songs.first.thumbnail != null
                             ? ClipRRect(borderRadius:BorderRadius.circular(12),
                                 child:Image.network(pl.songs.first.thumbnail!, fit:BoxFit.cover))
@@ -202,6 +201,3 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
   }
 }
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

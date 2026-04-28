@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark  = context.watch<ThemeProvider>().isDark;
-    final player  = context.read<PlayerProvider>();
+    final player  = Provider.of<PlayerProvider>(context, listen: false);
     final bg      = isDark ? AriseColors.demonBg     : AriseColors.angelBg;
     final textMut = isDark ? AriseColors.demonMuted  : AriseColors.angelMuted;
     final accent  = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
                     color: accent,
                   ),
-                  onPressed: () => context.read<ThemeProvider>().toggleTheme(),
+                  onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
                 ),
               ],
             ),
@@ -122,9 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildContent(BuildContext ctx, PlayerProvider player, bool isDark) {
-    final accent  = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
-    final textMut = isDark ? AriseColors.demonMuted  : AriseColors.angelMuted;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -290,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 thumb:  thumb,
                 onTap:  () {
                   if (id.isNotEmpty) {
-                    ctx.read<PlayerProvider>().playYtId(id,
+                    Provider.of<PlayerProvider>(ctx,     listen: false).playYtId(id,
                       title: title, artist: artist, thumbnail: thumb);
                   }
                 },
@@ -335,15 +332,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ── Sub-widgets ────────────────────────────────────────────────────────────────
 class _ArtistBubble extends StatelessWidget {
-  final String  name, thumb;
+  final String   name;
+  final String?  thumb;
   final VoidCallback onTap;
-  const _ArtistBubble({required this.name, required this.thumb, required this.onTap});
+  const _ArtistBubble({required this.name, this.thumb, required this.onTap});
 
-  // ignore: unused_element
-  const _ArtistBubble._({required this.name, required String? thumbNull, required this.onTap}) : thumb = '';
 
-  factory _ArtistBubble.create({required String name, String? thumb, required VoidCallback onTap}) =>
-      _ArtistBubble(name: name, thumb: thumb ?? '', onTap: onTap);
+  static _ArtistBubble create({required String name, String? thumb, required VoidCallback onTap}) =>
+      _ArtistBubble(name: name, thumb: thumb, onTap: onTap);
 
   @override
   Widget build(BuildContext context) {
@@ -361,11 +357,11 @@ class _ArtistBubble extends StatelessWidget {
               width: 72, height: 72,
               decoration: BoxDecoration(
                 shape:  BoxShape.circle,
-                border: Border.all(color: accent.withOpacity(.35), width: 2),
-                gradient: LinearGradient(colors: [accent.withOpacity(.3), accent.withOpacity(.1)]),
+                border: Border.all(color: accent.withValues(alpha: .35), width: 2),
+                gradient: LinearGradient(colors: [accent.withValues(alpha: .3), accent.withValues(alpha: .1)]),
               ),
               child: ClipOval(
-                child: thumb.isNotEmpty
+                child: thumb != null && thumb!.isNotEmpty
                     ? CachedNetworkImage(
                         imageUrl: thumb, fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => Center(
@@ -397,7 +393,7 @@ class _AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.read<ThemeProvider>().isDark;
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
     final accent  = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     final textPri = isDark ? AriseColors.demonText   : AriseColors.angelText;
     final textSub = isDark ? AriseColors.demonSubtext: AriseColors.angelSubtext;
@@ -416,7 +412,7 @@ class _AlbumCard extends StatelessWidget {
                 width: 120, height: 120, fit: BoxFit.cover,
                 errorWidget: (_, __, ___) => Container(
                   width:120, height:120,
-                  color: accent.withOpacity(.1),
+                  color: accent.withValues(alpha: .1),
                   child: Icon(Icons.album_rounded, color:accent, size:40),
                 ),
               ),
@@ -441,7 +437,7 @@ class _PodcastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.read<ThemeProvider>().isDark;
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
     final accent  = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
     final textPri = isDark ? AriseColors.demonText   : AriseColors.angelText;
     final textSub = isDark ? AriseColors.demonSubtext: AriseColors.angelSubtext;
@@ -461,7 +457,7 @@ class _PodcastCard extends StatelessWidget {
                     imageUrl: thumb, width:130, height:130, fit:BoxFit.cover,
                     errorWidget: (_, __, ___) => Container(
                       width:130, height:130,
-                      color: accent.withOpacity(.1),
+                      color: accent.withValues(alpha: .1),
                       child: Icon(Icons.mic_rounded, color:accent, size:40),
                     ),
                   ),
@@ -488,10 +484,4 @@ class _PodcastCard extends StatelessWidget {
   }
 }
 
-extension _ListExt<T> on List<T> {
-  T? get lastOrNull => isEmpty ? null : last;
-}
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

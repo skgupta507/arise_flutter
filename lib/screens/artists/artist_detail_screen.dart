@@ -70,11 +70,10 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen>
   @override
   Widget build(BuildContext context) {
     final isDark  = context.watch<ThemeProvider>().isDark;
-    final player  = context.read<PlayerProvider>();
+    final player  = Provider.of<PlayerProvider>(context, listen: false);
     final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
     final bg      = isDark ? AriseColors.demonBg      : AriseColors.angelBg;
     final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
-    final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
 
     final images = _artist?['image'] as List?;
@@ -99,17 +98,22 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen>
                       fit: StackFit.expand,
                       children: [
                         if (thumb != null)
-                          CachedNetworkImage(
-                            imageUrl:    thumb,
-                            fit:         BoxFit.cover,
+                          ColorFiltered(
                             colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(.55), BlendMode.darken),
+                              Colors.black.withValues(alpha: 0.55), BlendMode.darken,
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: thumb,
+                              fit:      BoxFit.cover,
+                              width:    double.infinity,
+                              height:   double.infinity,
+                            ),
                           )
                         else
                           Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [accent.withOpacity(.3), bg],
+                                colors: [accent.withValues(alpha: .3), bg],
                                 begin: Alignment.topCenter,
                                 end:   Alignment.bottomCenter,
                               ),
@@ -183,7 +187,7 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen>
                                   child: Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
                                     Expanded(child:ClipRRect(borderRadius:BorderRadius.circular(12),
                                       child:t!=null ? CachedNetworkImage(imageUrl:t, fit:BoxFit.cover, width:double.infinity)
-                                        : Container(color:accent.withOpacity(.1), child:Icon(Icons.album_rounded,color:accent,size:40)))),
+                                        : Container(color:accent.withValues(alpha: .1), child:Icon(Icons.album_rounded,color:accent,size:40)))),
                                     const SizedBox(height:5),
                                     Text(a['name']?.toString()??'', maxLines:1, overflow:TextOverflow.ellipsis,
                                       style:TextStyle(fontFamily:'Rajdhani', color:textPri, fontWeight:FontWeight.w700, fontSize:13)),
@@ -200,10 +204,4 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen>
   }
 }
 
-extension _ListExt<T> on List<T> {
-  T? get lastOrNull => isEmpty ? null : last;
-}
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/theme_provider.dart';
-import '../../theme/app_theme.dart';
 
 class _FeaturedItem {
   final String title, subtitle, desc, badge, query, image;
@@ -87,10 +86,8 @@ class _HomeHeroState extends State<HomeHero> {
                 key:      ValueKey(item.image),
                 imageUrl: item.image,
                 fit:      BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  isDark ? Colors.black.withOpacity(.65) : Colors.black.withOpacity(.45),
-                  BlendMode.darken,
-                ),
+                color: isDark ? Colors.black.withValues(alpha: 0.65) : Colors.black.withValues(alpha: 0.45),
+                colorBlendMode: BlendMode.darken,
               ),
             ),
 
@@ -101,8 +98,8 @@ class _HomeHeroState extends State<HomeHero> {
                   begin: Alignment.topRight,
                   end:   Alignment.bottomLeft,
                   colors: [
-                    item.accent.withOpacity(.2),
-                    Colors.black.withOpacity(.85),
+                    item.accent.withValues(alpha: .2),
+                    Colors.black.withValues(alpha: .85),
                   ],
                 ),
               ),

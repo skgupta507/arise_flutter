@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../api/muzo_api.dart';
 import '../../models/song_model.dart';
-import '../../providers/player_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_theme.dart';
@@ -31,7 +29,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
       _ctrl.text = widget.initialQuery!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<SearchProvider>().search(widget.initialQuery!);
+        Provider.of<SearchProvider>(context, listen: false).search(widget.initialQuery!);
       });
     }
   }
@@ -68,14 +66,14 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                     icon: Icon(Icons.close_rounded, color:textMut),
                     onPressed: () {
                       _ctrl.clear();
-                      context.read<SearchProvider>().clear();
+                      Provider.of<SearchProvider>(context, listen: false).clear();
                     },
                   )
                 : null,
           ),
-          onChanged: (q) => context.read<SearchProvider>().onQueryChanged(q),
+          onChanged: (q) => Provider.of<SearchProvider>(context, listen: false).onQueryChanged(q),
           onSubmitted: (q) {
-            if (q.trim().isNotEmpty) context.read<SearchProvider>().search(q);
+            if (q.trim().isNotEmpty) Provider.of<SearchProvider>(context, listen: false).search(q);
           },
           textInputAction: TextInputAction.search,
         ),
@@ -112,7 +110,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                             textSub: isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext,
                             onTap: (s) {
                               _ctrl.text = s;
-                              context.read<SearchProvider>().search(s);
+                              Provider.of<SearchProvider>(context, listen: false).search(s);
                             },
                           )
                         : TabBarView(
@@ -184,7 +182,7 @@ class _AllTab extends StatelessWidget {
                   children: [
                     ClipRRect(borderRadius: BorderRadius.circular(10),
                       child: CachedNetworkImage(imageUrl:thumb??'', width:110, height:110, fit:BoxFit.cover,
-                        errorWidget:(_,__,___)=>Container(width:110,height:110,color:Colors.grey.withOpacity(.2),
+                        errorWidget:(_,__,___)=>Container(width:110,height:110,color:Colors.grey.withValues(alpha: .2),
                           child:const Icon(Icons.album_rounded,size:40)))),
                     const SizedBox(height:4),
                     Text(a['name']?.toString()??'', maxLines:1, overflow:TextOverflow.ellipsis,
@@ -210,17 +208,17 @@ class _AllTab extends StatelessWidget {
               final images = a['image'] as List?;
               final thumb  = images?.lastOrNull?['url']?.toString();
               final name   = a['name']?.toString() ?? '';
-              final isDark = context.read<ThemeProvider>().isDark;
+              final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
               final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
               return GestureDetector(
                 onTap: () => context.go('/artists/${a['id']}?name=${Uri.encodeComponent(name)}'),
                 child: SizedBox(width:72, child:Column(children:[
                   Container(width:64, height:64,
                     decoration: BoxDecoration(shape:BoxShape.circle,
-                      border:Border.all(color:accent.withOpacity(.3),width:2)),
+                      border:Border.all(color:accent.withValues(alpha: .3),width:2)),
                     child: ClipOval(child: thumb!=null
                       ? CachedNetworkImage(imageUrl:thumb, fit:BoxFit.cover)
-                      : Container(color:accent.withOpacity(.1),
+                      : Container(color:accent.withValues(alpha: .1),
                           child:Center(child:Text(name.isNotEmpty?name[0].toUpperCase():'?',
                             style:TextStyle(fontFamily:'Orbitron',color:accent,fontSize:20,fontWeight:FontWeight.w900)))))),
                   const SizedBox(height:4),
@@ -277,7 +275,7 @@ class _AlbumsTab extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children:[
                 ClipRRect(borderRadius: BorderRadius.circular(14),
                   child: CachedNetworkImage(imageUrl:thumb??'', width:double.infinity, height:160, fit:BoxFit.cover,
-                    errorWidget:(_,__,___)=>Container(height:160,color:accent.withOpacity(.1),
+                    errorWidget:(_,__,___)=>Container(height:160,color:accent.withValues(alpha: .1),
                       child:Icon(Icons.album_rounded,color:accent,size:50)))),
                 const SizedBox(height:6),
                 Text(a['name']?.toString()??'', maxLines:1, overflow:TextOverflow.ellipsis,
@@ -317,10 +315,10 @@ class _ArtistsTab extends StatelessWidget {
               child: Column(children:[
                 Container(width:80, height:80,
                   decoration: BoxDecoration(shape:BoxShape.circle,
-                    border:Border.all(color:accent.withOpacity(.3),width:2)),
+                    border:Border.all(color:accent.withValues(alpha: .3),width:2)),
                   child: ClipOval(child: thumb!=null
                     ? CachedNetworkImage(imageUrl:thumb,fit:BoxFit.cover)
-                    : Container(color:accent.withOpacity(.1),
+                    : Container(color:accent.withValues(alpha: .1),
                         child:Center(child:Text(name.isNotEmpty?name[0].toUpperCase():'?',
                           style:TextStyle(fontFamily:'Orbitron',color:accent,fontSize:24,fontWeight:FontWeight.w900)))))),
                 const SizedBox(height:6),
@@ -351,10 +349,4 @@ class _EmptyState extends StatelessWidget {
   );
 }
 
-extension _ListExt<T> on List<T> {
-  T? get lastOrNull => isEmpty ? null : last;
-}
 
-extension _CtxRead on BuildContext {
-  T read<T>() => Provider.of<T>(this, listen: false);
-}
