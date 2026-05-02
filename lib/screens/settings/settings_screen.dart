@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/update_api.dart';
@@ -18,7 +18,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String  _version     = '';
   bool    _checkingUpd = false;
-  String? _updStatus;
+  String?     _updStatus;
 
   // Playback prefs (persisted via Hive in a real implementation)
   bool   _autoplay  = true;
@@ -39,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _checkUpdate() async {
-    setState(() { _checkingUpd = true; _updStatus = null; _pendingUpdate = null; });
+    setState(() { _checkingUpd = true; _updStatus = null; });
     final info = await UpdateApi.check();
     if (!mounted) return;
     setState(() {
@@ -108,9 +108,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _updStatus = 'Download complete! Tap to install');
     // Open for install
     try {
-      await OpenFilePlus.open(path);
+      final uri = Uri.parse('file://$path');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        setState(() => _updStatus = 'Download complete! Open $path to install');
+      }
     } catch (_) {
-      setState(() => _updStatus = 'Open the downloaded file manually to install');
+      setState(() => _updStatus = 'Download complete! Open the file manually to install');
     }
   }
 

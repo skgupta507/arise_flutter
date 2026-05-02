@@ -37,10 +37,9 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
 
   Future<void> _search(String q) async {
     if (q.trim().isEmpty) { setState(() => _results = []); return; }
-    setState(() => _loadingS = true);
     final r = await SaavnApi.searchArtists(q);
     if (!mounted) return;
-    setState(() { _results = r; _loadingS = false; });
+    setState(() => _results = r);
   }
 
   @override

@@ -58,8 +58,6 @@ class AppTheme {
         onSurface:      textPrimary,
         error:          const Color(0xFFCF6679),
         onError:        Colors.white,
-        surface:        bg,
-        onSurface:   textPrimary,
       ),
       fontFamily: 'Rajdhani',
       textTheme: TextTheme(

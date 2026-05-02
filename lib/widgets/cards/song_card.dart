@@ -34,6 +34,7 @@ class SongTile extends StatelessWidget {
     final textPri  = isDark ? AriseColors.demonText    : AriseColors.angelText;
     final textSub  = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut  = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
+    final cardBg   = isDark ? AriseColors.demonCard    : AriseColors.angelCard;
     final border   = isDark ? AriseColors.demonBorder  : AriseColors.angelBorder;
 
     final isPlaying = player.current?.id == song.id && player.playing;

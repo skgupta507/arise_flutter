@@ -53,10 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
     setState(() {
-      _trending  = (results[0] as List).map(SongModel.fromSaavn).toList();
-      _bollywood = (results[1] as List).map(SongModel.fromSaavn).toList();
-      _latest    = (results[2] as List).map(SongModel.fromSaavn).toList();
-      _lofi      = (results[3] as List).map(SongModel.fromSaavn).toList();
+      _trending  = (results[0] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
+      _bollywood = (results[1] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
+      _latest    = (results[2] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
+      _lofi      = (results[3] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
       _albums    = List<Map<String,dynamic>>.from(results[4] as List);
       _artists   = List<Map<String,dynamic>>.from(results[5] as List);
       _podcasts  = List<Map<String,dynamic>>.from(results[6] as List);
@@ -177,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     : images?.lastOrNull?['url']?.toString();
                 return _ArtistBubble(
                   name:   name,
-                  thumb:  thumb,
+                  thumb:  thumb ?? '',
                   onTap:  () => ctx.go('/artists/${a['id']}?name=${Uri.encodeComponent(name)}'),
                 );
               },
@@ -363,7 +363,7 @@ class _ArtistBubble extends StatelessWidget {
               child: ClipOval(
                 child: thumb != null && thumb!.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: thumb, fit: BoxFit.cover,
+                        imageUrl: thumb ?? '', fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => Center(
                           child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
                             style: TextStyle(fontFamily:'Orbitron', color:accent, fontSize:22, fontWeight:FontWeight.w900)),

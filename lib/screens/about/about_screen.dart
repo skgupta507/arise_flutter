@@ -32,6 +32,7 @@ class _AboutScreenState extends State<AboutScreen> {
     final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
     final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
     final textMut = isDark ? AriseColors.demonMuted   : AriseColors.angelMuted;
+    final border  = isDark ? AriseColors.demonBorder  : AriseColors.angelBorder;
 
     return Scaffold(
       backgroundColor: bg,

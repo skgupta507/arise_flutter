@@ -49,7 +49,6 @@ dependencies:
   receive_sharing_intent: 1.8.1     # Share music from other apps
 
   # ── Update system ─────────────────────────────────────────────────────────
-  open_file_plus: ^3.4.1            # Open downloaded APK for install
 
 dev_dependencies:
   flutter_test:
