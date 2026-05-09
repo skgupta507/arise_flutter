@@ -21,14 +21,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<SongModel> _trending  = [];
-  List<SongModel> _bollywood = [];
-  List<SongModel> _latest    = [];
-  List<SongModel> _lofi      = [];
-  List<Map<String,dynamic>> _albums  = [];
-  List<Map<String,dynamic>> _artists = [];
-  List<Map<String,dynamic>> _podcasts= [];
+  // Muzo trending (always loads — confirmed working)
+  List<SongModel> _trendingSongs    = [];
+  List<SongModel> _trendingVideos   = [];
+  List<Map<String, dynamic>> _trendingPlaylists = [];
+
+  // Saavn sections
+  List<SongModel> _bollywood  = [];
+  List<SongModel> _latest     = [];
+  List<SongModel> _lofi       = [];
+  List<Map<String, dynamic>> _albums   = [];
+  List<Map<String, dynamic>> _artists  = [];
+
   bool _loading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -38,30 +44,78 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     if (!mounted) return;
-    setState(() => _loading = true);
+    setState(() { _loading = true; _loadError = null; });
 
-    // Fire all fetches concurrently
-    final results = await Future.wait([
-      SaavnApi.searchSongs('trending hits india', limit: 20),
-      SaavnApi.searchSongs('bollywood hits 2025', limit: 20),
-      SaavnApi.searchSongs('new hindi songs 2025', limit: 20),
-      SaavnApi.searchSongs('lofi hindi chill',     limit: 16),
-      SaavnApi.searchAlbums('new hindi album 2025',limit: 14),
-      SaavnApi.searchArtists('trending indian artists'),
-      MuzoApi.searchPodcasts('popular indian podcast'),
-    ]);
+    try {
+      // Fire all fetches concurrently — each catches its own errors
+      final results = await Future.wait([
+        MuzoApi.trending(),                                          // 0 — always works
+        SaavnApi.searchSongs('bollywood hits 2025', limit: 20),     // 1
+        SaavnApi.searchSongs('new hindi songs 2025', limit: 20),    // 2
+        SaavnApi.searchSongs('lofi hindi chill', limit: 16),        // 3
+        SaavnApi.searchAlbums('new hindi album 2025', limit: 14),   // 4
+        SaavnApi.searchArtists('trending indian artists', limit: 14), // 5
+      ]);
 
-    if (!mounted) return;
-    setState(() {
-      _trending  = (results[0] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
-      _bollywood = (results[1] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
-      _latest    = (results[2] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
-      _lofi      = (results[3] as List).cast<Map<String,dynamic>>().map(SongModel.fromSaavn).toList();
-      _albums    = List<Map<String,dynamic>>.from(results[4] as List);
-      _artists   = List<Map<String,dynamic>>.from(results[5] as List);
-      _podcasts  = List<Map<String,dynamic>>.from(results[6] as List);
-      _loading   = false;
-    });
+      if (!mounted) return;
+
+      // Parse Muzo trending
+      final trending = results[0] as Map<String, dynamic>;
+      final tSongs   = (trending['songs']    as List? ?? [])
+          .whereType<Map<String, dynamic>>().toList();
+      final tVideos  = (trending['videos']   as List? ?? [])
+          .whereType<Map<String, dynamic>>().toList();
+      final tPlaylists = (trending['playlists'] as List? ?? [])
+          .whereType<Map<String, dynamic>>().toList();
+
+      setState(() {
+        // Muzo trending songs → SongModel
+        _trendingSongs = tSongs.take(20).map((m) {
+          final id = m['id']?.toString() ?? '';
+          return SongModel(
+            id:        id,
+            ytId:      id,
+            title:     m['title']?.toString() ?? '',
+            artist:    m['artist']?.toString() ?? '',
+            thumbnail: m['thumbnail']?.toString() ??
+                'https://i.ytimg.com/vi/$id/hqdefault.jpg',
+            source:    'youtube',
+            addedAt:   DateTime.now().millisecondsSinceEpoch,
+          );
+        }).toList();
+
+        // Muzo trending videos → SongModel
+        _trendingVideos = tVideos.take(20).map((m) {
+          final id = m['id']?.toString() ?? '';
+          return SongModel(
+            id:        id,
+            ytId:      id,
+            title:     m['title']?.toString() ?? '',
+            artist:    m['artist']?.toString() ?? '',
+            thumbnail: m['thumbnail']?.toString() ??
+                'https://i.ytimg.com/vi/$id/hqdefault.jpg',
+            source:    'youtube',
+            addedAt:   DateTime.now().millisecondsSinceEpoch,
+          );
+        }).toList();
+
+        _trendingPlaylists = tPlaylists.take(10).toList();
+
+        // Saavn sections
+        _bollywood = (results[1] as List<Map<String, dynamic>>)
+            .map(SongModel.fromSaavn).toList();
+        _latest    = (results[2] as List<Map<String, dynamic>>)
+            .map(SongModel.fromSaavn).toList();
+        _lofi      = (results[3] as List<Map<String, dynamic>>)
+            .map(SongModel.fromSaavn).toList();
+        _albums    = (results[4] as List<Map<String, dynamic>>);
+        _artists   = (results[5] as List<Map<String, dynamic>>);
+        _loading   = false;
+      });
+    } catch (e) {
+      debugPrint('HomeScreen._load error: $e');
+      if (mounted) setState(() { _loading = false; _loadError = e.toString(); });
+    }
   }
 
   @override
@@ -75,25 +129,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: bg,
       body: RefreshIndicator(
-        color:       accent,
-        onRefresh:   _load,
+        color:     accent,
+        onRefresh: _load,
         child: CustomScrollView(
           slivers: [
-            // ── App bar ──────────────────────────────────────────────────────
+            // ── App bar ────────────────────────────────────────────────────
             SliverAppBar(
-              floating:         true,
-              snap:             true,
-              backgroundColor:  bg,
-              elevation:        0,
+              floating:        true,
+              snap:            true,
+              backgroundColor: bg,
+              elevation:       0,
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Arise Music', style: TextStyle(
-                    fontFamily:'Orbitron', color:accent,
-                    fontWeight:FontWeight.w900, fontSize:18, letterSpacing:.5)),
+                    fontFamily: 'Orbitron', color: accent,
+                    fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: .5)),
                   Text(
                     isDark ? '✦ Rise from the Shadows ✦' : '✦ Hear the Divine ✦',
-                    style: TextStyle(fontFamily:'Orbitron', color:textMut, fontSize:9, letterSpacing:.2),
+                    style: TextStyle(
+                      fontFamily: 'Orbitron', color: textMut,
+                      fontSize: 9, letterSpacing: .2),
                   ),
                 ],
               ),
@@ -105,15 +161,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: Icon(
                     isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
-                    color: accent,
-                  ),
-                  onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
+                    color: accent),
+                  onPressed: () =>
+                      Provider.of<ThemeProvider>(context, listen: false)
+                          .toggleTheme(),
                 ),
               ],
             ),
 
             SliverToBoxAdapter(
-              child: _loading ? _buildSkeletons(isDark) : _buildContent(context, player, isDark),
+              child: _loading
+                  ? _buildSkeletons()
+                  : _loadError != null && _trendingSongs.isEmpty
+                      ? _buildError(accent, textMut)
+                      : _buildContent(context, player, isDark),
             ),
           ],
         ),
@@ -121,43 +182,111 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext ctx, PlayerProvider player, bool isDark) {
+  Widget _buildError(Color accent, Color textMut) {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        children: [
+          Icon(Icons.wifi_off_rounded, color: textMut, size: 48),
+          const SizedBox(height: 12),
+          Text('Could not load content',
+              style: TextStyle(
+                  fontFamily: 'Rajdhani', color: textMut, fontSize: 16)),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _load, child: const Text('Retry')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(
+      BuildContext ctx, PlayerProvider player, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Hero ─────────────────────────────────────────────────────────────
+        // ── Hero ──────────────────────────────────────────────────────────
         const Padding(
           padding: EdgeInsets.fromLTRB(12, 4, 12, 0),
           child:   HomeHero(),
         ),
         const SizedBox(height: 24),
 
-        // ── Mood playlists ────────────────────────────────────────────────────
+        // ── Mood playlists ─────────────────────────────────────────────────
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child:   MoodSection(),
         ),
         const SizedBox(height: 24),
 
-        // ── Trending ─────────────────────────────────────────────────────────
-        if (_trending.isNotEmpty) ...[
+        // ── Trending Songs (Muzo) ──────────────────────────────────────────
+        if (_trendingSongs.isNotEmpty) ...[
           HScrollSection(
-            title:    isDark ? '🔥 Trending India' : '✨ Trending India',
-            subtitle: isDark ? 'What the realm is consuming' : 'What the world is rejoicing',
+            title:       isDark ? '🔥 Trending Now' : '✨ Trending Now',
+            subtitle:    isDark ? 'What the realm is consuming' : 'What the world is rejoicing',
             seeAllRoute: '/trending',
-            height: 185,
-            children: _trending.map((s) => SongCard(song: s, queue: _trending)).toList(),
+            height:      185,
+            children:    _trendingSongs
+                .map((s) => SongCard(song: s, queue: _trendingSongs))
+                .toList(),
           ),
           const SizedBox(height: 24),
         ],
 
-        // ── Top Artists ───────────────────────────────────────────────────────
+        // ── Trending Videos (Muzo) ─────────────────────────────────────────
+        if (_trendingVideos.isNotEmpty) ...[
+          HScrollSection(
+            title:    isDark ? '🎬 Trending Videos' : '🎬 Popular Videos',
+            subtitle: isDark ? 'Hot from the underground' : 'Joyful videos of the moment',
+            height:   185,
+            children: _trendingVideos
+                .map((s) => SongCard(song: s, queue: _trendingVideos))
+                .toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+
+        // ── Trending Playlists (Muzo) ──────────────────────────────────────
+        if (_trendingPlaylists.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SectionHeader(
+              title:    isDark ? '📋 Trending Playlists' : '📋 Popular Playlists',
+              subtitle: isDark ? 'Curated from the abyss' : 'Curated for your soul',
+            ),
+          ),
+          SizedBox(
+            height: 175,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding:         const EdgeInsets.symmetric(horizontal: 16),
+              itemCount:       _trendingPlaylists.length,
+              separatorBuilder:(_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) {
+                final p = _trendingPlaylists[i];
+                final id    = p['id']?.toString() ?? '';
+                final title = p['title']?.toString() ?? '';
+                final thumb = p['thumbnail']?.toString() ?? '';
+                final artist= p['artist']?.toString() ?? '';
+                return _PlaylistCard(
+                  title:  title,
+                  artist: artist,
+                  thumb:  thumb,
+                  onTap:  () => player.playYtId(id,
+                      title: title, artist: artist, thumbnail: thumb),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+
+        // ── Top Artists (Saavn) ────────────────────────────────────────────
         if (_artists.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SectionHeader(
-              title:    isDark ? '🎤 Top Artists' : '🎤 Divine Artists',
-              subtitle: isDark ? 'Voices conjured from the depths' : 'Blessed voices of the divine',
+              title:       isDark ? '🎤 Top Artists' : '🎤 Divine Artists',
+              subtitle:    isDark ? 'Voices from the depths' : 'Blessed voices',
               seeAllRoute: '/artists',
             ),
           ),
@@ -166,19 +295,20 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding:         const EdgeInsets.symmetric(horizontal: 16),
-              itemCount:       _artists.take(14).length,
+              itemCount:       _artists.length,
               separatorBuilder:(_, __) => const SizedBox(width: 14),
               itemBuilder: (_, i) {
-                final a = _artists[i];
-                final name  = a['name']?.toString() ?? '';
-                final images= a['image'] as List?;
-                final thumb = images != null && images.length > 1
+                final a      = _artists[i];
+                final name   = a['name']?.toString() ?? '';
+                final images = a['image'] as List?;
+                final thumb  = images != null && images.length > 1
                     ? images[1]['url']?.toString()
                     : images?.lastOrNull?['url']?.toString();
                 return _ArtistBubble(
-                  name:   name,
-                  thumb:  thumb ?? '',
-                  onTap:  () => ctx.go('/artists/${a['id']}?name=${Uri.encodeComponent(name)}'),
+                  name:  name,
+                  thumb: thumb ?? '',
+                  onTap: () => ctx.go(
+                      '/artists/${a['id']}?name=${Uri.encodeComponent(name)}'),
                 );
               },
             ),
@@ -186,25 +316,27 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 24),
         ],
 
-        // ── Bollywood ─────────────────────────────────────────────────────────
+        // ── Bollywood Hits (Saavn) ─────────────────────────────────────────
         if (_bollywood.isNotEmpty) ...[
           HScrollSection(
-            title:    '🎬 Bollywood Hits',
-            subtitle: isDark ? 'Mortal realm anthems' : 'Joyful anthems of celebration',
+            title:       '🎬 Bollywood Hits',
+            subtitle:    isDark ? 'Mortal realm anthems' : 'Joyful anthems',
             seeAllRoute: '/search/bollywood hits',
-            height: 185,
-            children: _bollywood.map((s) => SongCard(song: s, queue: _bollywood)).toList(),
+            height:      185,
+            children:    _bollywood
+                .map((s) => SongCard(song: s, queue: _bollywood))
+                .toList(),
           ),
           const SizedBox(height: 24),
         ],
 
-        // ── New releases ──────────────────────────────────────────────────────
+        // ── New Releases (Saavn) ───────────────────────────────────────────
         if (_latest.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SectionHeader(
-              title:    isDark ? '💿 New Releases' : '💿 Fresh Arrivals',
-              subtitle: isDark ? 'Grimoires of sound sealed in blood' : 'Sacred albums of celestial harmony',
+              title:       isDark ? '💿 New Releases' : '💿 Fresh Arrivals',
+              subtitle:    isDark ? 'Freshly conjured' : 'Sacred new arrivals',
               seeAllRoute: '/albums',
             ),
           ),
@@ -212,34 +344,34 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: _latest.take(6).map((s) => SongTile(
-                song:  s,
-                queue: _latest,
+                song:      s,
+                queue:     _latest,
                 showIndex: true,
-                index: _latest.indexOf(s),
+                index:     _latest.indexOf(s),
               )).toList(),
             ),
           ),
           const SizedBox(height: 24),
         ],
 
-        // ── Lo-Fi ─────────────────────────────────────────────────────────────
+        // ── Lo-Fi (Saavn) ──────────────────────────────────────────────────
         if (_lofi.isNotEmpty) ...[
           HScrollSection(
             title:    isDark ? '🌙 Lo-Fi & Chill' : '☁️ Celestial Lo-Fi',
             subtitle: isDark ? 'Drifting in the void' : 'Study · Calm · Meditative',
-            height: 185,
+            height:   185,
             children: _lofi.map((s) => SongCard(song: s, queue: _lofi)).toList(),
           ),
           const SizedBox(height: 24),
         ],
 
-        // ── Albums ────────────────────────────────────────────────────────────
+        // ── Albums (Saavn) ─────────────────────────────────────────────────
         if (_albums.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SectionHeader(
-              title:    '💿 Albums',
-              subtitle: isDark ? 'Grimoires of sound' : 'Sacred collections',
+              title:       '💿 Albums',
+              subtitle:    isDark ? 'Grimoires of sound' : 'Sacred collections',
               seeAllRoute: '/albums',
             ),
           ),
@@ -248,51 +380,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding:         const EdgeInsets.symmetric(horizontal: 16),
-              itemCount:       _albums.take(14).length,
+              itemCount:       _albums.length,
               separatorBuilder:(_, __) => const SizedBox(width: 12),
               itemBuilder: (_, i) {
-                final a = _albums[i];
+                final a      = _albums[i];
                 final images = a['image'] as List?;
                 final thumb  = images != null && images.length > 1
                     ? images[1]['url']?.toString()
                     : null;
                 return _AlbumCard(
-                  name:  a['name']?.toString() ?? '',
-                  artist:a['description']?.toString() ?? '',
-                  thumb: thumb,
-                  onTap: () => ctx.go('/albums/${a['id']}'),
+                  name:   a['name']?.toString() ?? '',
+                  artist: a['description']?.toString() ?? '',
+                  thumb:  thumb,
+                  onTap:  () => ctx.go('/albums/${a['id']}'),
                 );
               },
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
-
-        // ── Podcasts ─────────────────────────────────────────────────────────
-        if (_podcasts.isNotEmpty) ...[
-          HScrollSection(
-            title:    '🎙 Podcasts',
-            subtitle: isDark ? 'Stories from the underground' : 'Stories of wisdom and light',
-            seeAllRoute: '/podcasts',
-            height: 185,
-            children: _podcasts.take(8).map((p) {
-              final id    = p['videoId']?.toString() ?? p['id']?.toString() ?? '';
-              final title = p['title']?.toString() ?? '';
-              final thumb = MuzoApi.thumbnail(p) ?? '';
-              final artist= (p['artists'] as List?)?.map((a) => a['name']?.toString() ?? '').join(', ') ?? '';
-              return _PodcastCard(
-                id:     id,
-                title:  title,
-                host:   artist,
-                thumb:  thumb,
-                onTap:  () {
-                  if (id.isNotEmpty) {
-                    Provider.of<PlayerProvider>(ctx,     listen: false).playYtId(id,
-                      title: title, artist: artist, thumbnail: thumb);
-                  }
-                },
-              );
-            }).toList(),
           ),
           const SizedBox(height: 32),
         ],
@@ -300,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSkeletons(bool isDark) {
+  Widget _buildSkeletons() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -314,15 +417,15 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 140,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: 5,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, __) => ShimmerBox(width: 130, height: 130),
+              itemCount:       5,
+              separatorBuilder:(_, __) => const SizedBox(width: 12),
+              itemBuilder:     (_, __) => ShimmerBox(width: 130, height: 130),
             ),
           ),
           const SizedBox(height: 24),
           ...List.generate(4, (_) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: ShimmerBox(width: double.infinity, height: 64, radius: 14),
+            child:   ShimmerBox(width: double.infinity, height: 64, radius: 14),
           )),
         ],
       ),
@@ -331,21 +434,18 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ── Sub-widgets ────────────────────────────────────────────────────────────────
+
 class _ArtistBubble extends StatelessWidget {
-  final String   name;
-  final String?  thumb;
+  final String name, thumb;
   final VoidCallback onTap;
-  const _ArtistBubble({required this.name, this.thumb, required this.onTap});
-
-
-  static _ArtistBubble create({required String name, String? thumb, required VoidCallback onTap}) =>
-      _ArtistBubble(name: name, thumb: thumb, onTap: onTap);
+  const _ArtistBubble(
+      {required this.name, required this.thumb, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.watch<ThemeProvider>().isDark;
-    final accent = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
-    final textSub= isDark ? AriseColors.demonSubtext: AriseColors.angelSubtext;
+    final isDark  = context.watch<ThemeProvider>().isDark;
+    final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
+    final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
 
     return GestureDetector(
       onTap: onTap,
@@ -357,46 +457,67 @@ class _ArtistBubble extends StatelessWidget {
               width: 72, height: 72,
               decoration: BoxDecoration(
                 shape:  BoxShape.circle,
-                border: Border.all(color: accent.withValues(alpha: .35), width: 2),
-                gradient: LinearGradient(colors: [accent.withValues(alpha: .3), accent.withValues(alpha: .1)]),
+                border: Border.all(
+                    color: accent.withValues(alpha: .35), width: 2),
+                gradient: LinearGradient(colors: [
+                  accent.withValues(alpha: .3),
+                  accent.withValues(alpha: .1)
+                ]),
               ),
               child: ClipOval(
-                child: thumb != null && thumb!.isNotEmpty
+                child: thumb.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: thumb ?? '', fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Center(
-                          child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: TextStyle(fontFamily:'Orbitron', color:accent, fontSize:22, fontWeight:FontWeight.w900)),
-                        ),
+                        imageUrl: thumb,
+                        fit:      BoxFit.cover,
+                        errorWidget: (_, __, ___) => _initial(name, accent),
                       )
-                    : Center(
-                        child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: TextStyle(fontFamily:'Orbitron', color:accent, fontSize:22, fontWeight:FontWeight.w900)),
-                      ),
+                    : _initial(name, accent),
               ),
             ),
             const SizedBox(height: 6),
-            Text(name, textAlign:TextAlign.center, maxLines:2, overflow:TextOverflow.ellipsis,
-              style: TextStyle(fontFamily:'Rajdhani', color:textSub, fontSize:11, fontWeight:FontWeight.w600)),
+            Text(name,
+                textAlign: TextAlign.center,
+                maxLines:  2,
+                overflow:  TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontFamily:  'Rajdhani',
+                    color:       textSub,
+                    fontSize:    11,
+                    fontWeight:  FontWeight.w600)),
           ],
         ),
       ),
     );
   }
+
+  Widget _initial(String name, Color accent) => Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : '?',
+          style: TextStyle(
+              fontFamily:  'Orbitron',
+              color:       accent,
+              fontSize:    22,
+              fontWeight:  FontWeight.w900),
+        ),
+      );
 }
 
 class _AlbumCard extends StatelessWidget {
   final String name, artist;
   final String? thumb;
   final VoidCallback onTap;
-  const _AlbumCard({required this.name, required this.artist, this.thumb, required this.onTap});
+  const _AlbumCard(
+      {required this.name,
+      required this.artist,
+      this.thumb,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
-    final accent  = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
-    final textPri = isDark ? AriseColors.demonText   : AriseColors.angelText;
-    final textSub = isDark ? AriseColors.demonSubtext: AriseColors.angelSubtext;
+    final isDark  = Provider.of<ThemeProvider>(context, listen: false).isDark;
+    final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
+    final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
+    final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
 
     return GestureDetector(
       onTap: onTap,
@@ -411,17 +532,26 @@ class _AlbumCard extends StatelessWidget {
                 imageUrl: thumb ?? '',
                 width: 120, height: 120, fit: BoxFit.cover,
                 errorWidget: (_, __, ___) => Container(
-                  width:120, height:120,
+                  width: 120, height: 120,
                   color: accent.withValues(alpha: .1),
-                  child: Icon(Icons.album_rounded, color:accent, size:40),
+                  child: Icon(Icons.album_rounded, color: accent, size: 40),
                 ),
               ),
             ),
             const SizedBox(height: 6),
-            Text(name, maxLines:1, overflow:TextOverflow.ellipsis,
-              style: TextStyle(fontFamily:'Rajdhani', color:textPri, fontWeight:FontWeight.w700, fontSize:12)),
-            Text(artist, maxLines:1, overflow:TextOverflow.ellipsis,
-              style: TextStyle(fontFamily:'Rajdhani', color:textSub, fontSize:11)),
+            Text(name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontFamily: 'Rajdhani',
+                    color:      textPri,
+                    fontWeight: FontWeight.w700,
+                    fontSize:   12)),
+            Text(artist,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontFamily: 'Rajdhani', color: textSub, fontSize: 11)),
           ],
         ),
       ),
@@ -429,18 +559,21 @@ class _AlbumCard extends StatelessWidget {
   }
 }
 
-class _PodcastCard extends StatelessWidget {
-  final String id, title, host, thumb;
+class _PlaylistCard extends StatelessWidget {
+  final String title, artist, thumb;
   final VoidCallback onTap;
-  const _PodcastCard({required this.id, required this.title, required this.host,
-    required this.thumb, required this.onTap});
+  const _PlaylistCard(
+      {required this.title,
+      required this.artist,
+      required this.thumb,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDark;
-    final accent  = isDark ? AriseColors.demonAccent : AriseColors.angelAccent;
-    final textPri = isDark ? AriseColors.demonText   : AriseColors.angelText;
-    final textSub = isDark ? AriseColors.demonSubtext: AriseColors.angelSubtext;
+    final isDark  = Provider.of<ThemeProvider>(context, listen: false).isDark;
+    final accent  = isDark ? AriseColors.demonAccent  : AriseColors.angelAccent;
+    final textPri = isDark ? AriseColors.demonText    : AriseColors.angelText;
+    final textSub = isDark ? AriseColors.demonSubtext : AriseColors.angelSubtext;
 
     return GestureDetector(
       onTap: onTap,
@@ -454,34 +587,51 @@ class _PodcastCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: CachedNetworkImage(
-                    imageUrl: thumb, width:130, height:130, fit:BoxFit.cover,
+                    imageUrl: thumb,
+                    width: 130, height: 130, fit: BoxFit.cover,
                     errorWidget: (_, __, ___) => Container(
-                      width:130, height:130,
+                      width: 130, height: 130,
                       color: accent.withValues(alpha: .1),
-                      child: Icon(Icons.mic_rounded, color:accent, size:40),
+                      child: Icon(Icons.queue_music_rounded,
+                          color: accent, size: 40),
                     ),
                   ),
                 ),
-                Positioned(top:6, right:6,
+                Positioned(
+                  top: 6, right: 6,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal:5, vertical:2),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
-                      color: accent, borderRadius: BorderRadius.circular(6)),
-                    child: Text('PODCAST', style: TextStyle(
-                      fontFamily:'Orbitron', color:Colors.white, fontSize:7, letterSpacing:.1)),
-                  )),
+                      color:        accent,
+                      borderRadius: BorderRadius.circular(6)),
+                    child: Text('PLAYLIST',
+                        style: const TextStyle(
+                            fontFamily: 'Orbitron',
+                            color:      Colors.white,
+                            fontSize:   7,
+                            letterSpacing: .1)),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),
-            Text(title, maxLines:2, overflow:TextOverflow.ellipsis,
-              style: TextStyle(fontFamily:'Rajdhani', color:textPri, fontWeight:FontWeight.w700, fontSize:12)),
-            Text(host, maxLines:1, overflow:TextOverflow.ellipsis,
-              style: TextStyle(fontFamily:'Rajdhani', color:textSub, fontSize:11)),
+            Text(title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontFamily: 'Rajdhani',
+                    color:      textPri,
+                    fontWeight: FontWeight.w700,
+                    fontSize:   12)),
+            Text(artist,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontFamily: 'Rajdhani', color: textSub, fontSize: 11)),
           ],
         ),
       ),
     );
   }
 }
-
-

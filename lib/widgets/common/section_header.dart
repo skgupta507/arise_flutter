@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_theme.dart';
@@ -51,7 +52,7 @@ class SectionHeader extends StatelessWidget {
           if (onSeeAll != null || seeAllRoute != null)
             GestureDetector(
               onTap: onSeeAll ?? () {
-                if (seeAllRoute != null) Navigator.pushNamed(context, seeAllRoute!);
+                if (seeAllRoute != null) context.go(seeAllRoute!);
               },
               child: Text('See all →', style: TextStyle(
                 fontFamily: 'Rajdhani', color: accent,

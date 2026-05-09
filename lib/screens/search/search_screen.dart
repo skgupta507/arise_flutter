@@ -25,7 +25,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(length: 5, vsync: this);
     if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
       _ctrl.text = widget.initialQuery!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -93,6 +93,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
               tabs: const [
                 Tab(text: 'ALL'),
                 Tab(text: 'SONGS'),
+                Tab(text: 'YOUTUBE'),
                 Tab(text: 'ALBUMS'),
                 Tab(text: 'ARTISTS'),
               ],
@@ -118,6 +119,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                             children: [
                               _AllTab(search: search, isDark: isDark),
                               _SongsTab(songs: search.songs),
+                              _SongsTab(songs: search.ytResults),
                               _AlbumsTab(albums: search.albums, isDark: isDark, accent: accent),
                               _ArtistsTab(artists: search.artists, isDark: isDark, accent: accent),
                             ],

@@ -42,7 +42,7 @@ class PlaylistModel {
     id:        j['id']?.toString() ?? '',
     name:      j['name']?.toString() ?? 'Playlist',
     songs:     (j['songs'] as List?)
-                  ?.map((s) => SongModel.fromSaavn(Map<String,dynamic>.from(s)))
+                  ?.map((s) => SongModel.fromJson(Map<String,dynamic>.from(s as Map)))
                   .toList() ?? [],
     thumbnail: j['thumbnail']?.toString(),
     source:    j['source']?.toString() ?? 'local',

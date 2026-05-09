@@ -20,12 +20,13 @@ class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
   bool _fullPlayerOpen = false;
 
-  static const _routes = ['/', '/search', '/library', '/settings'];
+  static const _routes = ['/', '/search', '/library', '/charts', '/settings'];
 
   static const _navItems = [
     NavigationDestination(icon: Icon(Icons.home_outlined),    selectedIcon: Icon(Icons.home),           label: 'HOME'),
     NavigationDestination(icon: Icon(Icons.search_outlined),   selectedIcon: Icon(Icons.search),         label: 'SEARCH'),
     NavigationDestination(icon: Icon(Icons.library_music_outlined), selectedIcon: Icon(Icons.library_music), label: 'LIBRARY'),
+    NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart),     label: 'CHARTS'),
     NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings),       label: 'SETTINGS'),
   ];
 

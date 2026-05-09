@@ -15,6 +15,7 @@ import '../screens/liked/liked_screen.dart';
 import '../screens/recent/recent_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/about/about_screen.dart';
+import '../screens/charts/charts_screen.dart';
 import '../widgets/common/main_shell.dart';
 
 class AppRouter {
@@ -47,6 +48,7 @@ class AppRouter {
           GoRoute(path: '/recent',    builder: (c,s) => const RecentScreen()),
           GoRoute(path: '/settings',  builder: (c,s) => const SettingsScreen()),
           GoRoute(path: '/about',     builder: (c,s) => const AboutScreen()),
+          GoRoute(path: '/charts',    builder: (c,s) => const ChartsScreen()),
         ],
       ),
     ],

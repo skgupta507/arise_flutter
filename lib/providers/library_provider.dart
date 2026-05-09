@@ -6,40 +6,56 @@ import '../models/song_model.dart';
 import '../models/playlist_model.dart';
 
 class LibraryProvider extends ChangeNotifier {
-  late Box _likedBox;
-  late Box _playlists;
-  late Box _recent;
+  List<SongModel>     _liked   = [];
+  List<PlaylistModel> _userPls = [];
+  List<SongModel>     _history = [];
 
-  List<SongModel>    _liked     = [];
-  List<PlaylistModel>_userPls   = [];
-  List<SongModel>    _history   = [];
+  List<SongModel>     get liked          => List.unmodifiable(_liked);
+  List<PlaylistModel> get playlists      => List.unmodifiable(_userPls);
+  List<SongModel>     get recentlyPlayed => List.unmodifiable(_history);
+  int                 get likedCount     => _liked.length;
+  int                 get plCount        => _userPls.length;
 
-  List<SongModel>    get liked      => List.unmodifiable(_liked);
-  List<PlaylistModel>get playlists  => List.unmodifiable(_userPls);
-  List<SongModel>    get recentlyPlayed => List.unmodifiable(_history);
-  int                get likedCount => _liked.length;
-  int                get plCount    => _userPls.length;
-
-  LibraryProvider() { _init(); }
-
-  Future<void> _init() async {
-    _likedBox  = Hive.box('arise_liked');
-    _playlists = Hive.box('arise_playlists');
-    _recent    = Hive.box('arise_recent');
+  LibraryProvider() {
     _load();
   }
 
+  // ── Safe box accessors ────────────────────────────────────────────────────
+  Box? get _likedBox  { try { return Hive.box('arise_liked');     } catch (_) { return null; } }
+  Box? get _plsBox    { try { return Hive.box('arise_playlists'); } catch (_) { return null; } }
+  Box? get _recentBox { try { return Hive.box('arise_recent');    } catch (_) { return null; } }
+
   void _load() {
-    final likedStr = _likedBox.get('songs',   defaultValue: '[]') as String;
-    final plsStr   = _playlists.get('all',    defaultValue: '[]') as String;
-    final histStr  = _recent.get('history',   defaultValue: '[]') as String;
-    _liked   = (jsonDecode(likedStr) as List)
-        .map((j) => SongModel.fromSaavn(Map<String,dynamic>.from(j as Map))).toList();
-    _userPls = (jsonDecode(plsStr)   as List)
-        .map((j) => PlaylistModel.fromJson(Map<String,dynamic>.from(j as Map))).toList();
-    _history = (jsonDecode(histStr)  as List)
-        .map((j) => SongModel.fromSaavn(Map<String,dynamic>.from(j as Map))).toList();
+    try {
+      final likedStr = _likedBox?.get('songs',   defaultValue: '[]') as String? ?? '[]';
+      final plsStr   = _plsBox?.get('all',       defaultValue: '[]') as String? ?? '[]';
+      final histStr  = _recentBox?.get('history',defaultValue: '[]') as String? ?? '[]';
+      _liked   = _parseSongs(likedStr);
+      _userPls = _parsePlaylists(plsStr);
+      _history = _parseSongs(histStr);
+    } catch (e) {
+      debugPrint('LibraryProvider._load error: $e');
+      _liked   = [];
+      _userPls = [];
+      _history = [];
+    }
     notifyListeners();
+  }
+
+  List<SongModel> _parseSongs(String raw) {
+    try {
+      return (jsonDecode(raw) as List)
+          .map((j) => SongModel.fromJson(Map<String, dynamic>.from(j as Map)))
+          .toList();
+    } catch (_) { return []; }
+  }
+
+  List<PlaylistModel> _parsePlaylists(String raw) {
+    try {
+      return (jsonDecode(raw) as List)
+          .map((j) => PlaylistModel.fromJson(Map<String, dynamic>.from(j as Map)))
+          .toList();
+    } catch (_) { return []; }
   }
 
   // ── Like / unlike ─────────────────────────────────────────────────────────
@@ -56,19 +72,23 @@ class LibraryProvider extends ChangeNotifier {
   }
 
   void _saveLiked() {
-    _likedBox.put('songs', jsonEncode(_liked.map((s) => s.toJson()).toList()));
+    try {
+      _likedBox?.put('songs', jsonEncode(_liked.map((s) => s.toJson()).toList()));
+    } catch (e) { debugPrint('_saveLiked error: $e'); }
   }
 
   // ── Recently played ───────────────────────────────────────────────────────
   void addToRecent(SongModel song) {
     _history = [song, ..._history.where((s) => s.id != song.id)].take(50).toList();
-    _recent.put('history', jsonEncode(_history.map((s) => s.toJson()).toList()));
+    try {
+      _recentBox?.put('history', jsonEncode(_history.map((s) => s.toJson()).toList()));
+    } catch (e) { debugPrint('addToRecent error: $e'); }
     notifyListeners();
   }
 
   void clearHistory() {
     _history = [];
-    _recent.delete('history');
+    try { _recentBox?.delete('history'); } catch (_) {}
     notifyListeners();
   }
 
@@ -132,7 +152,8 @@ class LibraryProvider extends ChangeNotifier {
       _userPls.where((p) => p.id == id).firstOrNull;
 
   void _savePlaylists() {
-    _playlists.put('all', jsonEncode(_userPls.map((p) => p.toJson()).toList()));
+    try {
+      _plsBox?.put('all', jsonEncode(_userPls.map((p) => p.toJson()).toList()));
+    } catch (e) { debugPrint('_savePlaylists error: $e'); }
   }
 }
-

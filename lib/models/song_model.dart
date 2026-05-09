@@ -94,6 +94,26 @@ class SongModel {
     );
   }
 
+  /// From stored JSON (toJson round-trip) — source-agnostic
+  factory SongModel.fromJson(Map<String, dynamic> json) {
+    return SongModel(
+      id:          json['id']?.toString() ?? '',
+      title:       json['title']?.toString() ?? '',
+      artist:      json['artist']?.toString() ?? '',
+      album:       json['album']?.toString(),
+      thumbnail:   json['thumbnail']?.toString(),
+      streamUrl:   json['streamUrl']?.toString(),
+      ytId:        json['ytId']?.toString(),
+      source:      json['source']?.toString() ?? 'saavn',
+      duration:    json['duration']?.toString(),
+      durationSec: json['durationSec'] as int?,
+      addedAt:     json['addedAt'] as int? ?? 0,
+      language:    json['language']?.toString(),
+      albumId:     json['albumId']?.toString(),
+      artistId:    json['artistId']?.toString(),
+    );
+  }
+
   SongModel copyWith({String? streamUrl, String? ytId}) => SongModel(
     id: id, title: title, artist: artist, album: album,
     thumbnail: thumbnail, source: source, duration: duration,
@@ -106,7 +126,9 @@ class SongModel {
   Map<String,dynamic> toJson() => {
     'id': id, 'title': title, 'artist': artist, 'album': album,
     'thumbnail': thumbnail, 'streamUrl': streamUrl, 'ytId': ytId,
-    'source': source, 'duration': duration, 'addedAt': addedAt,
+    'source': source, 'duration': duration, 'durationSec': durationSec,
+    'addedAt': addedAt, 'language': language, 'albumId': albumId,
+    'artistId': artistId,
   };
 
   @override
