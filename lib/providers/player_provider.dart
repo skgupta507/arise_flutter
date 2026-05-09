@@ -6,7 +6,6 @@ import 'package:just_audio_background/just_audio_background.dart';
 import '../models/song_model.dart';
 import '../api/saavn_api.dart';
 import '../api/muzo_api.dart';
-import '../api/rapid_api.dart';
 
 enum RepeatMode { none, one, all }
 
@@ -24,30 +23,27 @@ class PlayerProvider extends ChangeNotifier {
   Duration        _duration= Duration.zero;
   bool            _loading = false;
   String?         _error;
-
-  // ── New feature flags ─────────────────────────────────────────────────────
   bool            _skipSilence       = false;
   bool            _normalizeLoudness = false;
   Timer?          _sleepTimer;
   Duration?       _sleepRemaining;
 
-  SongModel?      get current   => _current;
-  List<SongModel> get queue     => List.unmodifiable(_queue);
-  List<SongModel> get history   => List.unmodifiable(_history);
-  bool            get playing   => _playing;
-  RepeatMode      get repeat    => _repeat;
-  bool            get shuffle   => _shuffle;
-  double          get volume    => _volume;
-  Duration        get position  => _position;
-  Duration        get duration  => _duration;
-  bool            get loading   => _loading;
-  String?         get error     => _error;
-  bool            get hasTrack  => _current != null;
-  bool            get skipSilence       => _skipSilence;
-  bool            get normalizeLoudness => _normalizeLoudness;
-  Duration?       get sleepRemaining    => _sleepRemaining;
+  SongModel?      get current            => _current;
+  List<SongModel> get queue              => List.unmodifiable(_queue);
+  List<SongModel> get history            => List.unmodifiable(_history);
+  bool            get playing            => _playing;
+  RepeatMode      get repeat             => _repeat;
+  bool            get shuffle            => _shuffle;
+  double          get volume             => _volume;
+  Duration        get position           => _position;
+  Duration        get duration           => _duration;
+  bool            get loading            => _loading;
+  String?         get error              => _error;
+  bool            get hasTrack           => _current != null;
+  bool            get skipSilence        => _skipSilence;
+  bool            get normalizeLoudness  => _normalizeLoudness;
+  Duration?       get sleepRemaining     => _sleepRemaining;
 
-  /// Expose raw position stream for lyrics sync
   Stream<Duration> get positionStream => _player.positionStream;
 
   double get progress {
@@ -97,7 +93,9 @@ class PlayerProvider extends ChangeNotifier {
 
     try {
       final streamUrl = await _resolveStream(song);
-      if (streamUrl == null) throw Exception('No stream URL found');
+      if (streamUrl == null || streamUrl.isEmpty) {
+        throw Exception('No stream URL found for: ${song.title}');
+      }
 
       Uri? artUri;
       try {
@@ -129,78 +127,72 @@ class PlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 3-tier stream resolution:
-  /// 1. Muzo /api/stream/:ytId  (Invidious — best quality)
-  /// 2. Saavn downloadUrl       (for Saavn songs)
-  /// 3. RapidAPI video/info     (fallback)
+  // ── Stream resolution — PRIORITY ORDER ───────────────────────────────────
+  // Saavn songs:  1. Saavn downloadUrl (fast, reliable)
+  //               2. Muzo stream via YouTube ID lookup (better quality)
+  // YouTube songs: 1. Muzo /api/stream/:ytId
+  //                2. Construct YouTube audio URL fallback
   Future<String?> _resolveStream(SongModel song) async {
-    // ── Tier 1: YouTube path via Muzo ────────────────────────────────────
-    if (song.source == 'youtube' || song.ytId != null) {
+    if (song.source == 'saavn') {
+      // ── Saavn: try direct stream URL first (fastest) ──────────────────
+      // Use pre-resolved URL if available
+      if (song.streamUrl != null && song.streamUrl!.isNotEmpty) {
+        debugPrint('Using pre-resolved Saavn URL for ${song.title}');
+        return song.streamUrl;
+      }
+      // Fetch from API
+      final saavnUrl = await _saavnStreamUrl(song.id);
+      if (saavnUrl != null && saavnUrl.isNotEmpty) {
+        debugPrint('Got Saavn stream URL for ${song.title}');
+        return saavnUrl;
+      }
+      // Fallback: try Muzo YouTube lookup
+      debugPrint('Saavn URL failed, trying Muzo for ${song.title}');
+      return await _muzoStreamForSong(song);
+    } else {
+      // ── YouTube: try Muzo stream ──────────────────────────────────────
       final ytId = song.ytId ?? song.id;
-      final url = await MuzoApi.streamUrl(ytId);
-      if (url != null) return url;
-
-      // Muzo failed → try RapidAPI
-      final rapidUrl = await _rapidStreamUrl(ytId);
-      if (rapidUrl != null) return rapidUrl;
-      return null;
-    }
-
-    // ── Tier 2: Saavn path ───────────────────────────────────────────────
-    // Try to find YouTube ID first for better quality
-    final ytId = await MuzoApi.findVideoId(
-      name: song.title, artist: song.artist,
-    );
-    if (ytId != null && ytId.isNotEmpty) {
-      final url = await MuzoApi.streamUrl(ytId);
-      if (url != null) {
-        _current = song.copyWith(ytId: ytId);
-        return url;
+      if (ytId.isNotEmpty) {
+        final muzoUrl = await _muzoStreamUrl(ytId);
+        if (muzoUrl != null) return muzoUrl;
       }
-      // Muzo stream failed, try RapidAPI with found ytId
-      final rapidUrl = await _rapidStreamUrl(ytId);
-      if (rapidUrl != null) {
-        _current = song.copyWith(ytId: ytId);
-        return rapidUrl;
-      }
+      // Last resort: try Saavn search
+      return await _muzoStreamForSong(song);
     }
-
-    // ── Tier 3: Saavn direct stream URL ──────────────────────────────────
-    if (song.streamUrl != null && song.streamUrl!.isNotEmpty) {
-      return song.streamUrl;
-    }
-    return await _saavnStreamUrl(song.id);
   }
 
   Future<String?> _saavnStreamUrl(String songId) async {
     try {
-      final song = await SaavnApi.getSongById(songId);
-      if (song == null) return null;
-      return SaavnApi.bestStreamUrl(song);
-    } catch (_) { return null; }
+      final data = await SaavnApi.getSongById(songId);
+      if (data == null) return null;
+      return SaavnApi.bestStreamUrl(data);
+    } catch (e) {
+      debugPrint('_saavnStreamUrl error: $e');
+      return null;
+    }
   }
 
-  Future<String?> _rapidStreamUrl(String videoId) async {
+  Future<String?> _muzoStreamUrl(String videoId) async {
     try {
-      final info = await RapidApi.videoInfo(videoId);
-      if (info == null) return null;
-      // Some RapidAPI responses include adaptiveFormats
-      final adaptive = info['adaptiveFormats'] as List?;
-      if (adaptive != null && adaptive.isNotEmpty) {
-        final audio = adaptive
-            .where((f) => f['type']?.toString().contains('audio') == true && f['url'] != null)
-            .toList();
-        if (audio.isNotEmpty) {
-          audio.sort((a, b) {
-            final aBr = int.tryParse(a['bitrate']?.toString() ?? '0') ?? 0;
-            final bBr = int.tryParse(b['bitrate']?.toString() ?? '0') ?? 0;
-            return bBr.compareTo(aBr);
-          });
-          return audio.first['url'] as String?;
-        }
-      }
+      return await MuzoApi.streamUrl(videoId);
+    } catch (e) {
+      debugPrint('_muzoStreamUrl error: $e');
       return null;
-    } catch (_) { return null; }
+    }
+  }
+
+  Future<String?> _muzoStreamForSong(SongModel song) async {
+    try {
+      final ytId = await MuzoApi.findVideoId(
+        name: song.title, artist: song.artist,
+      );
+      if (ytId == null || ytId.isEmpty) return null;
+      _current = song.copyWith(ytId: ytId);
+      return await _muzoStreamUrl(ytId);
+    } catch (e) {
+      debugPrint('_muzoStreamForSong error: $e');
+      return null;
+    }
   }
 
   // ── Play YouTube video by ID ──────────────────────────────────────────────
@@ -249,7 +241,6 @@ class PlayerProvider extends ChangeNotifier {
     await play(prev);
   }
 
-  // ── Playback controls ─────────────────────────────────────────────────────
   Future<void> togglePlayPause() async {
     try {
       _player.playing ? await _player.pause() : await _player.play();
@@ -297,7 +288,6 @@ class PlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Auto-queue ────────────────────────────────────────────────────────────
   Future<void> _autoQueue(SongModel song) async {
     try {
       final ytId = song.ytId ?? (song.source == 'youtube' ? song.id : null);
@@ -336,21 +326,17 @@ class PlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Skip silence ──────────────────────────────────────────────────────────
   Future<void> setSkipSilence(bool value) async {
     _skipSilence = value;
     try { await _player.setSkipSilenceEnabled(value); } catch (_) {}
     notifyListeners();
   }
 
-  // ── Normalize loudness ────────────────────────────────────────────────────
   void setNormalizeLoudness(bool value) {
     _normalizeLoudness = value;
-    // just_audio doesn't have built-in normalization; we adjust volume as proxy
     notifyListeners();
   }
 
-  // ── Sleep timer ───────────────────────────────────────────────────────────
   void setSleepTimer(Duration duration) {
     _sleepTimer?.cancel();
     _sleepRemaining = duration;

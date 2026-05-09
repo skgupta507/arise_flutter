@@ -82,7 +82,7 @@ class HScrollSection extends StatelessWidget {
     this.seeAllRoute,
     required this.children,
     this.itemSpacing = 12,
-    this.height      = 200,
+    this.height      = 210,
     this.padding     = const EdgeInsets.symmetric(horizontal: 16),
   });
 

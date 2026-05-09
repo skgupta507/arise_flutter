@@ -251,6 +251,7 @@ class SongCard extends StatelessWidget {
         width: width,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               children: [
